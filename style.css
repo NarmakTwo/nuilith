@@ -138,3 +138,14 @@ body {
 #editor {
     overflow: hidden !important;
 }
+
+#left-pane {
+    display: flex;
+    flex-direction: column;
+}
+
+#editor {
+    flex: 1; /* This makes the editor stretch to fill the pane */
+    min-height: 0; 
+    overflow: hidden !important;
+}
