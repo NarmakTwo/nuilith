@@ -127,3 +127,14 @@ body {
         display: none;
     }
 }
+
+/* Force the CodeMirror instance to fill its container */
+.CodeMirror {
+    height: 100% !important;
+}
+
+/* Optional: Ensure the editor div doesn't show its own scrollbars 
+   since CodeMirror handles scrolling internally */
+#editor {
+    overflow: hidden !important;
+}
