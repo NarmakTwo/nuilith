@@ -66,27 +66,66 @@
             </div>
             
         </div>
-        <div class="flex w-full h-100 overflow-hidden min-h-0" style="height: calc(100vh - 120px);" id="doublepanel">
-            <div id="left-pane" class="w-1/2 h-full overflow-hidden border-r-4 border-gray-700 pane min-h-0">
-                <div class="border-t-3 border-b-2 border-gray-700 min-h-0" style="background-color: var(--menu);" id="toolbar-left">
-                    <ol class="flex flex-row p-2 items-center justify-end" style="justify-content: space-between;">
-                        <li class="items-center justify-center text-center"><p class="flex text-lg w-20 h-8 items-center justify-center text-white align-middle text-center rounded-lg bg-gray-700">main.py</p></li>
+        <div class="flex w-full overflow-hidden" style="height: calc(100vh - 120px); margin-top: 10px;" id="doublepanel">
+            
+            <style>
+                /* Essential CSS to pin CodeMirror and Terminal */
+                #left-pane, #output {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0; /* Critical: allows children to shrink */
+                }
+        
+                #editor, #terminal {
+                    flex: 1;           /* Grow to fill remaining space */
+                    min-height: 0;     /* Prevent content from pushing height out */
+                    position: relative; /* Anchor for CodeMirror */
+                }
+        
+                /* Force CodeMirror to fill the #editor div exactly */
+                .CodeMirror {
+                    position: absolute !important;
+                    top: 0; bottom: 0; left: 0; right: 0;
+                    height: 100% !important;
+                }
+        
+                /* Prevent the toolbar from ever squishing */
+                #toolbar-left, #toolbar-right {
+                    flex-shrink: 0;
+                }
+        
+                /* Clean up terminal height */
+                .terminal {
+                    height: 100% !important;
+                }
+            </style>
+        
+            <div id="left-pane" class="w-1/2 h-full border-r-4 border-gray-700 pane">
+                <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-left">
+                    <ol class="flex flex-row p-2 items-center justify-between">
+                        <li class="items-center justify-center text-center">
+                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700">main.py</p>
+                        </li>
                         <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="loadcode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import</button></li>
                         <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="savecode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export</button></li>
                         <li><button class="w-15 h-7 rounded-lg text-white clickbutton" id="runbutton" onclick="runcode();">Run</button></li>
                     </ol>
                 </div>
-                <div class="w-full h-full overflow-hidden min-h-0" style="background-color: #1C2130;" id="editor"></div>
+                <div id="editor" style="background-color: #1C2130;"></div>
             </div>
+        
             <div id="divider" class="pane-divider"></div>
-            <div class="w-1/2 h-full overflow-hidden pane min-h-0" id="output">
-                <div class="border-t-3 border-b-2 border-gray-700 min-h-0" style="background-color: var(--menu);" id="toolbar-right">
-                    <ol class="flex flex-row p-2 items-center justify-end" style="justify-content: space-between;">
-                        <li class="items-center justify-center text-center"><p class="flex text-lg w-20 h-8 items-center justify-center text-white align-middle text-center rounded-lg bg-gray-700">Output</p></li>
+        
+            <div id="output" class="w-1/2 h-full pane">
+                <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-right">
+                    <ol class="flex flex-row p-2 items-center justify-between">
+                        <li class="items-center justify-center text-center">
+                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700">Output</p>
+                        </li>
                         <li><button class="w-15 h-7 rounded-lg text-white border-2 border-white" onclick="term.clear();">Clear</button></li>
                     </ol>
                 </div>
-                <div class="overflow-hidden min-h-0" id="terminal"></div>
+                <div id="terminal"></div>
             </div>
         </div>
         
