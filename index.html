@@ -6,8 +6,8 @@
         <meta name="google-site-verification" content="CpAng4m2FN9I3xtFIFi9GPz4MOLer0KbxNSsX8OgLrM" />
         <!-- openrouter tags -->
         <meta property="og:title" content="Nuilith IDE" />
-        <meta property="og:description" content="Nuilith Python IDE" />
-        <meta property="description" content="Nuilith Python IDE" />
+        <meta property="og:description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
+        <meta property="description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
         <meta property="og:image" content="/assets/icon.png" />
         <title>Nuilith Python IDE</title>
         <!-- basic components -->
@@ -16,6 +16,9 @@
         <script src="https://unpkg.com/codemirror@5.65.21/lib/codemirror.js"></script>
         <script src="https://unpkg.com/codemirror@5.65.21/mode/python/python.js"></script>
         <link rel="stylesheet" type="text/css" href="https://unpkg.com/codemirror@5.65.21/lib/codemirror.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/nord.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/rubyblue.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/vibrant-ink.css">
         <link rel="stylesheet" type="text/css" href="/programiz.css">
         <script src="https://unpkg.com/alpinejs" defer></script>
 
@@ -52,18 +55,19 @@
         <script src="/index.js"></script>
 
     </head>
-    <body>
-        <div class="flex items-center gap-4 m-2" id="info" x-data="{ open: false }">
+    <body x-data="ideState" x-init="init()">
+        <div class="flex items-center gap-4 m-2" id="info">
             <h1 class="text-2xl text-center bg-gray-800 border border-gray-700 pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
                 <img src="/assets/icon.png" class="w-10 h-10 inline-block mr-2" />
-                <span class="clickable" @click="open = true" @click.away="open = false">Nuilith</span>&nbsp;Python IDE
+                <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
             </h1>
 
-            <div class="absolute mt-32" x-show="open" x-transition.opacity style="display: none; z-index: 50;">
-                <span class="text-sm w-80 inline-block border border-gray-800 p-4 rounded-lg bg-gray-800 shadow-md shadow-black/40">
-                    <b>Nuilith</b> is a <a class="clickable" href="https://en.wikipedia.org/wiki/Neo-Latin">Neo-Latin</a> pseudoword meaning "No Stupid".
-                </span>
-            </div>
+            <button @click="settingsOpen = true" class="p-2 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
             
         </div>
         <div class="flex w-full overflow-hidden" style="height: calc(100vh - 120px); margin-top: 10px;" id="doublepanel">
@@ -108,7 +112,14 @@
                         </li>
                         <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="loadcode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import</button></li>
                         <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="savecode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export</button></li>
-                        <li><button class="w-15 h-7 rounded-lg text-white clickbutton" id="runbutton" onclick="runcode();">Run</button></li>
+                        <li>
+                            <template x-if="!running">
+                                <button class="w-15 h-7 rounded-lg text-white clickbutton" id="runbutton" onclick="runcode();">Run</button>
+                            </template>
+                            <template x-if="running">
+                                <button class="w-15 h-7 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors" id="stopbutton" onclick="stopcode();">Stop</button>
+                            </template>
+                        </li>
                     </ol>
                 </div>
                 <div id="editor" style="background-color: #1C2130;"></div>
@@ -128,7 +139,67 @@
                 <div id="terminal"></div>
             </div>
         </div>
-        
+
+        <!-- Settings Modal -->
+        <div x-show="settingsOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
+            <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/80" @click.away="settingsOpen = false">
+                <div class="p-6 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
+                    <h2 class="text-2xl font-bold text-white">Settings</h2>
+                    <button @click="settingsOpen = false" class="text-gray-400 hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-8">
+                    <!-- Themes Section -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Themes</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <template x-for="t in themes" :key="t.id">
+                                <div @click="setTheme(t.id)" 
+                                     :class="theme === t.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-800 hover:border-gray-500'"
+                                     class="cursor-pointer border-2 rounded-xl p-3 transition-all">
+                                    <div :style="`background: ${t.preview}`" class="h-12 w-full rounded-md mb-2 shadow-inner"></div>
+                                    <span class="text-sm font-medium text-white block text-center" x-text="t.name"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </section>
+
+                    <!-- Editor Preferences -->
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-300 mb-4">Font Size</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="range" min="10" max="30" x-model="fontSize" @input="updateFontSize()" class="flex-1 accent-blue-500">
+                                <span class="text-white w-8 text-center" x-text="fontSize + 'px'"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-300 mb-4">Line Numbers</h3>
+                            <button @click="toggleLineNumbers()" 
+                                    :class="lineNumbers ? 'bg-blue-600' : 'bg-gray-700'"
+                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none">
+                                <span :class="lineNumbers ? 'translate-x-6' : 'translate-x-1'"
+                                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- System Maintenance -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">System Maintenance</h3>
+                        <div class="flex flex-wrap gap-4">
+                            <button @click="clearCodeCache()" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors">Clear Code Cache</button>
+                            <button @click="clearSiteCache()" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors">Clear Site Cache</button>
+                            <button @click="resetToDefaults()" class="px-4 py-2 bg-red-900/40 border border-red-800 rounded-lg text-sm text-red-200 hover:bg-red-900/60 transition-colors">Reset All to Defaults</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
         
     </body>
 </html>

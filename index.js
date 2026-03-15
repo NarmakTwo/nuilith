@@ -2,7 +2,7 @@
  * Nuilith IDE - Main UI Controller
  */
 
-let pythonWorker = new Worker('worker.js');
+let pythonWorker = null;
 globalThis.term = null;
 globalThis.myCodeMirror = null;
 globalThis.autosaveTime = Math.floor(Date.now() / 1000);
@@ -10,8 +10,31 @@ globalThis.nuilithPrompt = '[[b;green;]>>> ]';
 let pendingLintCallback = null;
 let lintRequestId = 0;
 
+function initWorker() {
+    if (pythonWorker) pythonWorker.terminate();
+    pythonWorker = new Worker('worker.js');
+    pythonWorker.onmessage = (event) => {
+        const { type, text, annotations } = event.data;
+        if (type === "LINT_RESULT" && pendingLintCallback) {
+            pendingLintCallback(event.data.id ?? 0, annotations);
+            pendingLintCallback = null;
+        }
+        if (type === "PRINT") term.echo(text, { newline: false });
+        if (type === "ERROR") {
+            term.error(text, { newline: false });
+            term.set_prompt(globalThis.nuilithPrompt);
+            if (window.ideStateData) window.ideStateData.running = false;
+        }
+        if (type === "FINISHED") {
+            term.set_prompt(globalThis.nuilithPrompt);
+            if (window.ideStateData) window.ideStateData.running = false;
+        }
+    };
+}
+
 // Python lint: pyflakes via worker (async)
 const pythonLint = function(text, callback) {
+    if (!pythonWorker) return;
     const id = ++lintRequestId;
     pendingLintCallback = (resultId, annotations) => {
         if (id === resultId) callback(annotations);
@@ -21,34 +44,104 @@ const pythonLint = function(text, callback) {
 pythonLint.async = true;
 CodeMirror.registerHelper("lint", "python", pythonLint);
 
-// Python hint: method completions after a dot
-CodeMirror.registerHelper("hint", "python", function(cm, options) {
-    const cur = cm.getCursor();
-    const line = cm.getLine(cur.line).slice(0, cur.ch);
-
-    // Only trigger after a dot
-    const dotMatch = line.match(/(\w+)\.\s*(\w*)$/);
-    if (!dotMatch) return null;
-
-    const methods = {
-        str:  ["split","strip","replace","upper","lower","find","format","startswith","endswith","join","encode","decode","count","index","lstrip","rstrip","zfill","title","capitalize"],
-        list: ["append","pop","remove","sort","reverse","extend","insert","copy","count","index","clear"],
-        dict: ["keys","values","items","get","update","pop","setdefault","clear","copy"],
-        set:  ["add","remove","discard","union","intersection","difference","issubset","issuperset"],
-    };
-
-    const typed = dotMatch[2]; // what the user has typed after the dot
-    const allMethods = [...new Set(Object.values(methods).flat())];
-    const list = allMethods.filter(m => m.startsWith(typed));
-
-    if (list.length === 0) return null;
-
-    const dotPos = line.lastIndexOf(".") + 1;
-    return {
-        list,
-        from: CodeMirror.Pos(cur.line, dotPos),
-        to:   CodeMirror.Pos(cur.line, cur.ch),
-    };
+// Alpine.js State
+document.addEventListener('alpine:init', () => {
+    Alpine.data('ideState', () => ({
+        settingsOpen: false,
+        running: false,
+        theme: localStorage.getItem('theme') || 'dark',
+        fontSize: parseInt(localStorage.getItem('fontSize')) || 16,
+        lineNumbers: localStorage.getItem('lineNumbers') !== 'false',
+        themes: [
+            { id: 'dark', name: 'Dark (Default)', preview: '#1c2130' },
+            { id: 'light', name: 'Light', preview: '#f8fafc' },
+            { id: 'nord-dark', name: 'Nord Dark', preview: '#2e3440' },
+            { id: 'nord-light', name: 'Nord Light', preview: '#e5e9f0' },
+            { id: 'dark-red', name: 'Dark Red', preview: '#2d1a1a' },
+            { id: 'light-red', name: 'Light Red', preview: '#fff5f5' },
+            { id: 'amoled', name: 'AMOLED', preview: '#000000' }
+        ],
+        init() {
+            window.ideStateData = this;
+            this.applyTheme();
+            this.updateFontSize();
+            this.updateLineNumbers();
+        },
+        setTheme(id) {
+            this.theme = id;
+            localStorage.setItem('theme', id);
+            this.applyTheme();
+        },
+        applyTheme() {
+            const themes = {
+                'dark': { bg: '#1c2130', fg: '#ffffff', menu: '#2d3343', accent: '#3b82f6', cm: 'programiz' },
+                'light': { bg: '#f8fafc', fg: '#1e293b', menu: '#e2e8f0', accent: '#3b82f6', cm: 'default' },
+                'nord-dark': { bg: '#2e3440', fg: '#eceff4', menu: '#3b4252', accent: '#88c0d0', cm: 'nord' },
+                'nord-light': { bg: '#e5e9f0', fg: '#2e3440', menu: '#d8dee9', accent: '#81a1c1', cm: 'default' },
+                'dark-red': { bg: '#1a0f0f', fg: '#ff9999', menu: '#2d1a1a', accent: '#ef4444', cm: 'rubyblue' },
+                'light-red': { bg: '#fff5f5', fg: '#991b1b', menu: '#fee2e2', accent: '#ef4444', cm: 'default' },
+                'amoled': { bg: '#000000', fg: '#ffffff', menu: '#111111', accent: '#3b82f6', cm: 'vibrant-ink' }
+            };
+            const t = themes[this.theme] || themes.dark;
+            document.documentElement.style.setProperty('--bg', t.bg);
+            document.documentElement.style.setProperty('--fg', t.fg);
+            document.documentElement.style.setProperty('--menu', t.menu);
+            document.documentElement.style.setProperty('--hil', t.accent);
+            
+            if (globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.setOption('theme', t.cm);
+                document.getElementById('editor').style.backgroundColor = t.bg;
+            }
+            if (globalThis.term) {
+                const termEl = document.querySelector('#terminal .terminal');
+                if (termEl) {
+                    termEl.style.setProperty('--background', t.bg, 'important');
+                    termEl.style.setProperty('--color', t.fg, 'important');
+                    termEl.style.backgroundColor = t.bg;
+                }
+            }
+        },
+        updateFontSize() {
+            localStorage.setItem('fontSize', this.fontSize);
+            if (globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.getWrapperElement().style.fontSize = this.fontSize + 'px';
+                globalThis.myCodeMirror.refresh();
+            }
+            if (globalThis.term) {
+                document.querySelector('#terminal').style.fontSize = this.fontSize + 'px';
+            }
+        },
+        toggleLineNumbers() {
+            this.lineNumbers = !this.lineNumbers;
+            localStorage.setItem('lineNumbers', this.lineNumbers);
+            this.updateLineNumbers();
+        },
+        updateLineNumbers() {
+            if (globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.setOption('lineNumbers', this.lineNumbers);
+            }
+        },
+        clearCodeCache() {
+            const request = indexedDB.deleteDatabase('nuilithdb');
+            request.onsuccess = () => {
+                alert('Code cache cleared. Please reload to see default code.');
+            };
+        },
+        clearSiteCache() {
+            localStorage.clear();
+            location.reload();
+        },
+        resetToDefaults() {
+            this.theme = 'dark';
+            this.fontSize = 16;
+            this.lineNumbers = true;
+            this.setTheme('dark');
+            this.updateFontSize();
+            if (!this.lineNumbers) this.toggleLineNumbers();
+            localStorage.clear();
+            alert('All settings reset to defaults.');
+        }
+    }));
 });
 
 window.addEventListener('load', async () => {
@@ -68,7 +161,6 @@ window.addEventListener('load', async () => {
                     const port = event.ports[0];
                     if (!port) return;
                     globalThis.term.read("", (userInput) => {
-                        // jQuery Terminal may pass array of char codes in some modes
                         const str = Array.isArray(userInput) && userInput.every(n => typeof n === 'number')
                             ? String.fromCharCode.apply(null, userInput)
                             : String(userInput ?? '').replace(/\r?\n$/, '');
@@ -90,22 +182,7 @@ window.addEventListener('load', async () => {
         prompt: globalThis.nuilithPrompt
     });
 
-    // 3. Handle Messages from the Worker
-    pythonWorker.onmessage = (event) => {
-        const { type, text, annotations } = event.data;
-        if (type === "LINT_RESULT" && pendingLintCallback) {
-            pendingLintCallback(event.data.id ?? 0, annotations);
-            pendingLintCallback = null;
-        }
-        if (type === "PRINT") term.echo(text, { newline: false });
-        if (type === "ERROR") {
-            term.error(text, { newline: false });
-            term.set_prompt(globalThis.nuilithPrompt);
-        }
-        if (type === "FINISHED") {
-            term.set_prompt(globalThis.nuilithPrompt);
-        }
-    };
+    initWorker();
 
     // 4. Draggable divider between panes
     const container = document.getElementById('doublepanel');
@@ -160,7 +237,7 @@ window.addEventListener('load', async () => {
     // 5. CodeMirror Setup
     const editorpage = document.getElementById("editor");
     globalThis.myCodeMirror = CodeMirror(editorpage, {
-        value: "name = input('What is your name? ')\nprint(f'Hello, {name}!')",
+        value: "print('Hello World')",
         mode: "python",
         theme: "programiz",
         lineNumbers: true,
@@ -189,9 +266,16 @@ window.addEventListener('load', async () => {
 
 function runcode() {
     term.clear();
-    // hide prompt while user code runs
     if (term.set_prompt) term.set_prompt('');
+    if (window.ideStateData) window.ideStateData.running = true;
     pythonWorker.postMessage({ type: "RUN", code: myCodeMirror.getValue() });
+}
+
+function stopcode() {
+    initWorker();
+    if (window.ideStateData) window.ideStateData.running = false;
+    term.set_prompt(globalThis.nuilithPrompt);
+    term.echo('[[b;red;]Execution terminated.]');
 }
 
 function setupTimers() {

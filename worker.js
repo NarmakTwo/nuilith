@@ -84,15 +84,6 @@ check(code_str, "main.py", r)
     if (type === "RUN") {
         if (!pyodide) return;
 
-        // Auto-install imports
-        const imports = [...code.matchAll(/^(?:from|import)\s+([a-zA-Z0-9_]+)/gm)].map(m => m[1]);
-        if (imports.length > 0) {
-            const micropip = pyodide.pyimport("micropip");
-            for (const pkg of imports) {
-                try { await micropip.install(pkg); } catch (e) {}
-            }
-        }
-
         // Setup the Sync Input Bridge
         // We use the 'postToUI' JS function defined above to avoid DataCloneError
         await pyodide.runPythonAsync(`

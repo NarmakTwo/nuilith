@@ -1,13 +1,13 @@
 :root {
-    --code: #1c2130ff;
-    --accent: #2d2f34ff;
-    --bg: #1f2023ff;
-    --hil: #0556f3ff;
-    --menu: #383b40ff;
+    --bg: #1c2130ff;
     --fg: #ffffffff;
+    --menu: #383b40ff;
+    --hil: #3b82f6;
     --hil2: #c2a523ff;
     --hil3: #806c17ff;
 }
+
+[x-cloak] { display: none !important; }
 
 .clickable {
     cursor: pointer;
@@ -16,26 +16,21 @@
 }
 
 .clickable:hover {
-    cursor: pointer;
     color: var(--hil2);
-    transition: color 0.3s ease-in-out;
 }
 
 .clickable:active {
-    cursor: pointer;
     color: var(--hil3);
-    transition: color 0.1s ease-out;
 }
-
 
 body {
     background-color: var(--bg);
     color: var(--fg);
     background-image:
-        radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 55%),
-        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.16), transparent 55%),
-        linear-gradient(145deg, #171821 0%, #101016 45%, #1b1e28 100%);
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.08), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.08), transparent 55%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .clickbutton {
@@ -45,73 +40,62 @@ body {
 }
 
 .clickbutton:hover {
-    cursor: pointer;
-    background-color: var(--hil2);
-    transition: background-color 0.15s ease-in-out;
+    filter: brightness(1.1);
 }
 
 .clickbutton:active {
-    cursor: pointer;
-    background-color: var(--hil3);
-    transition: background-color 0.1s ease-out;
+    filter: brightness(0.9);
 }
 
-/* Right panel needs to be a flex column */
 #output {
     display: flex;
     flex-direction: column;
 }
 
-/* Terminal fills remaining space after toolbar */
 #terminal {
     flex: 1;
-    min-height: 0;        /* critical — without this, flex won't shrink past content */
-    background-color: #1C2130;
+    min-height: 0;
+    background-color: var(--bg);
 }
 
-/* Inner terminal div must also fill its container */
 #terminal .terminal {
     height: 100% !important;
-    --background: #1C2130 !important;
-    background-color: #1C2130 !important;
+    --background: var(--bg) !important;
+    --color: var(--fg) !important;
+    background-color: var(--bg) !important;
 }
 
-/* Pane chrome: subtle gradient + shadow */
 .pane {
-    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 60%),
-                linear-gradient(180deg, #242733 0%, #181b24 100%);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(8px);
     border-radius: 0.75rem;
     box-shadow:
-        0 22px 45px rgba(0, 0, 0, 0.65),
-        0 0 0 1px rgba(148, 163, 184, 0.12);
-    border-color: rgba(55, 65, 81, 0.8);
+        0 22px 45px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(148, 163, 184, 0.1);
+    border: 1px solid rgba(55, 65, 81, 0.5);
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 #toolbar-left,
 #toolbar-right {
-    background: linear-gradient(180deg, #2f333d 0%, #23252e 100%) !important;
-    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.6);
+    background-color: var(--menu) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
 }
 
-/* Draggable divider between panes */
 .pane-divider {
     width: 6px;
     cursor: col-resize;
-    background: linear-gradient(180deg, #4b5563 0%, #1f2937 100%);
-    box-shadow:
-        inset 0 0 0 1px rgba(15, 23, 42, 0.8),
-        0 0 0 1px rgba(15, 23, 42, 0.8),
-        0 16px 30px rgba(0, 0, 0, 0.55);
+    background: rgba(75, 85, 99, 0.5);
     margin: 0 4px;
     border-radius: 999px;
 }
 
 .pane-divider:hover {
-    background: linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%);
+    background: var(--hil);
 }
 
-/* Responsive: stack panes vertically on small screens */
 @media (max-width: 900px) {
     #doublepanel {
         flex-direction: column;
@@ -128,15 +112,15 @@ body {
     }
 }
 
-/* Force the CodeMirror instance to fill its container */
 .CodeMirror {
     height: 100% !important;
+    background-color: var(--bg) !important;
+    color: var(--fg) !important;
 }
 
-/* Optional: Ensure the editor div doesn't show its own scrollbars 
-   since CodeMirror handles scrolling internally */
 #editor {
     overflow: hidden !important;
+    background-color: var(--bg);
 }
 
 #left-pane {
@@ -145,7 +129,25 @@ body {
 }
 
 #editor {
-    flex: 1; /* This makes the editor stretch to fill the pane */
+    flex: 1;
     min-height: 0; 
-    overflow: hidden !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
 }
