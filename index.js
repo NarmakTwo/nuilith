@@ -335,6 +335,7 @@ document.addEventListener('alpine:init', () => {
         featureTabs: localStorage.getItem('featureTabs') !== 'false',
         featurePackages: localStorage.getItem('featurePackages') !== 'false',
         featureToasts: localStorage.getItem('featureToasts') !== 'false',
+        zenMode: false,
 
         // Editor settings
         theme: localStorage.getItem('theme') || 'dark',
@@ -659,6 +660,7 @@ document.addEventListener('alpine:init', () => {
             this.featureTabs = true;
             this.featurePackages = true;
             this.featureToasts = true;
+            this.zenMode = false;
             this.setTheme('dark');
             this.updateFontSize();
             if (!this.lineNumbers) this.toggleLineNumbers();

@@ -132,7 +132,7 @@
             </style>
         
             <!-- LEFT PANE: Editor -->
-            <div id="left-pane" class="w-1/2 h-full border-r-4 border-gray-700 pane">
+            <div id="left-pane" :class="zenMode ? 'w-full border-r-0' : 'w-1/2 border-r-4 border-gray-700'" class="h-full pane transition-all duration-300">
                 <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-left">
                     <ol class="flex flex-row p-2 items-center justify-between">
 
@@ -177,6 +177,14 @@
                         </li>
 
                         <li class="flex items-center gap-2">
+                            <!-- Zen Mode Toggle -->
+                            <button @click="zenMode = !zenMode; setTimeout(() => { if(myCodeMirror) myCodeMirror.refresh(); }, 350)" 
+                                    class="btn btn-xs btn-outline btn-info text-white" 
+                                    :title="zenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'">
+                                <svg x-show="!zenMode" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                <svg x-show="zenMode"  xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>
+                            </button>
+
                             <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="loadcode();">
                                 <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import
                             </button>
@@ -195,10 +203,10 @@
                 <div id="editor" style="background-color: #1C2130;"></div>
             </div>
         
-            <div id="divider" class="pane-divider"></div>
+            <div id="divider" :class="{'hidden': zenMode}" class="pane-divider"></div>
         
             <!-- RIGHT PANE: Output -->
-            <div id="output" class="w-1/2 h-full pane">
+            <div id="output" x-show="!zenMode" class="w-1/2 h-full pane">
                 <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-right">
                     <ol class="flex flex-row p-2 items-center justify-between">
                         <li class="items-center justify-center text-center">
