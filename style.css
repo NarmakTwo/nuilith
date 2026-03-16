@@ -151,3 +151,118 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.4);
 }
+
+/* Tab bar horizontal scroll */
+.tab-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.tab-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Fix DaisyUI select dropdown text in dark mode */
+.select option {
+    background: #1f2937;
+    color: #f3f4f6;
+}
+
+/* ===== Custom Toggle Switch (replaces broken DaisyUI v5 toggle) ===== */
+/* DaisyUI v5 @layer nesting conflicts with Tailwind browser runtime, */
+/* so we implement our own toggle CSS from scratch.                    */
+input.toggle {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    width: 3rem !important;
+    height: 1.5rem !important;
+    border-radius: 9999px !important;
+    background-color: #374151 !important;
+    position: relative !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    border: 2px solid transparent !important;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease !important;
+    flex-shrink: 0 !important;
+}
+
+input.toggle::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 2px !important;
+    left: 2px !important;
+    width: calc(1.5rem - 8px) !important;
+    height: calc(1.5rem - 8px) !important;
+    border-radius: 9999px !important;
+    background-color: #9ca3af !important;
+    transition: transform 0.2s ease, background-color 0.2s ease !important;
+    display: block !important;
+}
+
+input.toggle:checked {
+    background-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3) !important;
+}
+
+input.toggle:checked::after {
+    transform: translateX(calc(3rem - 1.5rem)) !important;
+    background-color: white !important;
+}
+
+input.toggle:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+/* Toggle color variants */
+input.toggle-primary:checked {
+    background-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3) !important;
+}
+
+input.toggle-success:checked {
+    background-color: #22c55e !important;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3) !important;
+}
+
+input.toggle-warning:checked {
+    background-color: #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3) !important;
+}
+
+input.toggle-error:checked {
+    background-color: #ef4444 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* ===== Custom Range Slider ===== */
+input[type="range"].range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: #374151;
+    outline: none;
+}
+
+input[type="range"].range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: #6366f1;
+    cursor: pointer;
+    border: 2px solid #1f2937;
+}
+
+input[type="range"].range::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: #6366f1;
+    cursor: pointer;
+    border: 2px solid #1f2937;
+}

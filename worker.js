@@ -81,6 +81,50 @@ check(code_str, "main.py", r)
         return;
     }
 
+    // --- MICROPIP INSTALL HANDLER ---
+    if (type === "INSTALL") {
+        const pkg = event.data.package;
+        if (!pyodide) {
+            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: "Python runtime not ready yet." });
+            return;
+        }
+        try {
+            await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("${pkg.replace(/"/g, '\\"')}")
+            `);
+            // Get updated list of installed packages
+            const listResult = await pyodide.runPythonAsync(`
+import micropip, json
+json.dumps(sorted([str(p) for p in micropip.list()]))
+            `);
+            const packages = JSON.parse(listResult.toString());
+            self.postMessage({ type: "INSTALL_SUCCESS", package: pkg, installedPackages: packages });
+        } catch (err) {
+            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: String(err.message) });
+        }
+        return;
+    }
+
+    // --- LIST PACKAGES HANDLER ---
+    if (type === "LIST_PACKAGES") {
+        if (!pyodide) {
+            self.postMessage({ type: "PACKAGE_LIST", installedPackages: [] });
+            return;
+        }
+        try {
+            const listResult = await pyodide.runPythonAsync(`
+import micropip, json
+json.dumps(sorted([str(p) for p in micropip.list()]))
+            `);
+            const packages = JSON.parse(listResult.toString());
+            self.postMessage({ type: "PACKAGE_LIST", installedPackages: packages });
+        } catch (err) {
+            self.postMessage({ type: "PACKAGE_LIST", installedPackages: [] });
+        }
+        return;
+    }
+
     if (type === "RUN") {
         if (!pyodide) return;
 
@@ -142,4 +186,3 @@ builtins.input = sync_input
 };
 
 initPython();
-

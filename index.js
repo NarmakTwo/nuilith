@@ -10,6 +10,240 @@ globalThis.nuilithPrompt = '[[b;green;]>>> ]';
 let pendingLintCallback = null;
 let lintRequestId = 0;
 
+// ===== IDB Constants =====
+const DB_NAME = 'nuilithdb';
+const DB_VERSION = 2;
+const FILES_STORE = 'files';
+const OLD_STORE = 'autosave';
+
+// ===== Toast System =====
+function showToast(message, type = 'info') {
+    // check if feature is enabled
+    if (window.ideStateData && !window.ideStateData.featureToasts) {
+        alert(message);
+        return;
+    }
+
+    const container = document.getElementById('toast-container');
+    if (!container) { alert(message); return; }
+
+    const alertClasses = {
+        info:    'alert-info',
+        success: 'alert-success',
+        warning: 'alert-warning',
+        error:   'alert-error'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `alert ${alertClasses[type] || 'alert-info'} shadow-lg transition-all duration-300 opacity-0 translate-x-4`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-x-4');
+        toast.classList.add('opacity-100', 'translate-x-0');
+    });
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        toast.classList.remove('opacity-100', 'translate-x-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ===== IndexedDB File System =====
+function openFilesDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+
+            // Create new files store if it doesn't exist
+            if (!db.objectStoreNames.contains(FILES_STORE)) {
+                db.createObjectStore(FILES_STORE, { keyPath: 'filename' });
+            }
+        };
+
+        request.onsuccess = (e) => {
+            const db = e.target.result;
+            // Defensive: if the files store doesn't exist (stale DB), 
+            // delete and re-create to trigger onupgradeneeded
+            if (!db.objectStoreNames.contains(FILES_STORE)) {
+                db.close();
+                const delReq = indexedDB.deleteDatabase(DB_NAME);
+                delReq.onsuccess = () => {
+                    // Re-open, this time onupgradeneeded will fire
+                    const retry = indexedDB.open(DB_NAME, DB_VERSION);
+                    retry.onupgradeneeded = (ev) => {
+                        const newDb = ev.target.result;
+                        if (!newDb.objectStoreNames.contains(FILES_STORE)) {
+                            newDb.createObjectStore(FILES_STORE, { keyPath: 'filename' });
+                        }
+                    };
+                    retry.onsuccess = (ev) => resolve(ev.target.result);
+                    retry.onerror = (ev) => reject(ev.target.error);
+                };
+                delReq.onerror = () => reject(new Error('Failed to delete stale DB'));
+                return;
+            }
+            resolve(db);
+        };
+
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function migrateOldData() {
+    try {
+        // Try opening old DB version to read data
+        const oldReq = indexedDB.open(DB_NAME, DB_VERSION);
+        const db = await new Promise((resolve, reject) => {
+            oldReq.onsuccess = (e) => resolve(e.target.result);
+            oldReq.onerror = (e) => reject(e.target.error);
+        });
+
+        if (!db.objectStoreNames.contains(OLD_STORE)) {
+            db.close();
+            return null;
+        }
+
+        // Check if files store already has data
+        const tx = db.transaction([FILES_STORE], 'readonly');
+        const filesStore = tx.objectStore(FILES_STORE);
+        const count = await new Promise((resolve) => {
+            const req = filesStore.count();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(0);
+        });
+
+        if (count > 0) {
+            db.close();
+            return null; // Already migrated
+        }
+
+        // Read old autosave data
+        const oldTx = db.transaction([OLD_STORE], 'readonly');
+        const oldStore = oldTx.objectStore(OLD_STORE);
+        const oldData = await new Promise((resolve) => {
+            const req = oldStore.get(1);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+        });
+
+        if (oldData && oldData.code) {
+            // Write to new files store
+            const writeTx = db.transaction([FILES_STORE], 'readwrite');
+            writeTx.objectStore(FILES_STORE).put({
+                filename: 'main.py',
+                code: oldData.code,
+                active: true
+            });
+            await new Promise((resolve, reject) => {
+                writeTx.oncomplete = resolve;
+                writeTx.onerror = reject;
+            });
+        }
+
+        db.close();
+        return oldData?.code || null;
+    } catch (err) {
+        console.warn('Migration check failed (OK on first load):', err);
+        return null;
+    }
+}
+
+async function getAllFiles() {
+    try {
+        const db = await openFilesDB();
+        const tx = db.transaction(FILES_STORE, 'readonly');
+        const store = tx.objectStore(FILES_STORE);
+        const files = await new Promise((resolve) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve([]);
+        });
+        db.close();
+        return files;
+    } catch {
+        return [];
+    }
+}
+
+async function getFile(filename) {
+    try {
+        const db = await openFilesDB();
+        const tx = db.transaction(FILES_STORE, 'readonly');
+        const store = tx.objectStore(FILES_STORE);
+        const file = await new Promise((resolve) => {
+            const req = store.get(filename);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+        });
+        db.close();
+        return file;
+    } catch {
+        return null;
+    }
+}
+
+async function saveFile(filename, code, active = false) {
+    try {
+        const db = await openFilesDB();
+        const tx = db.transaction(FILES_STORE, 'readwrite');
+        tx.objectStore(FILES_STORE).put({ filename, code, active });
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+        db.close();
+    } catch (err) {
+        console.error('Error saving file:', err);
+    }
+}
+
+async function deleteFileFromDB(filename) {
+    try {
+        const db = await openFilesDB();
+        const tx = db.transaction(FILES_STORE, 'readwrite');
+        tx.objectStore(FILES_STORE).delete(filename);
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+        db.close();
+    } catch (err) {
+        console.error('Error deleting file:', err);
+    }
+}
+
+async function setActiveFile(filename) {
+    try {
+        const db = await openFilesDB();
+        const tx = db.transaction(FILES_STORE, 'readwrite');
+        const store = tx.objectStore(FILES_STORE);
+        const all = await new Promise((resolve) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve([]);
+        });
+        for (const f of all) {
+            f.active = (f.filename === filename);
+            store.put(f);
+        }
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+        db.close();
+    } catch (err) {
+        console.error('Error setting active file:', err);
+    }
+}
+
+// ===== Worker Init =====
 function initWorker() {
     if (pythonWorker) pythonWorker.terminate();
     pythonWorker = new Worker('worker.js');
@@ -29,6 +263,23 @@ function initWorker() {
             term.set_prompt(globalThis.nuilithPrompt);
             if (window.ideStateData) window.ideStateData.running = false;
         }
+        // Micropip handlers
+        if (type === "INSTALL_SUCCESS") {
+            if (window.ideStateData) {
+                window.ideStateData.installedPackages = event.data.installedPackages || [];
+                window.ideStateData.installingPackage = false;
+            }
+            showToast(`Package "${event.data.package}" installed successfully!`, 'success');
+        }
+        if (type === "INSTALL_ERROR") {
+            if (window.ideStateData) window.ideStateData.installingPackage = false;
+            showToast(`Failed to install "${event.data.package}": ${event.data.error}`, 'error');
+        }
+        if (type === "PACKAGE_LIST") {
+            if (window.ideStateData) {
+                window.ideStateData.installedPackages = event.data.installedPackages || [];
+            }
+        }
     };
 }
 
@@ -44,14 +295,34 @@ const pythonLint = function(text, callback) {
 pythonLint.async = true;
 CodeMirror.registerHelper("lint", "python", pythonLint);
 
-// Alpine.js State
+// ===== Alpine.js State =====
 document.addEventListener('alpine:init', () => {
     Alpine.data('ideState', () => ({
         settingsOpen: false,
         running: false,
+        packagesOpen: false,
+        packageName: '',
+        installedPackages: [],
+        installingPackage: false,
+
+        // Feature toggles
+        newUI: localStorage.getItem('newUI') !== 'false',
+        featureTabs: localStorage.getItem('featureTabs') !== 'false',
+        featurePackages: localStorage.getItem('featurePackages') !== 'false',
+        featureToasts: localStorage.getItem('featureToasts') !== 'false',
+
+        // Editor settings
         theme: localStorage.getItem('theme') || 'dark',
         fontSize: parseInt(localStorage.getItem('fontSize')) || 16,
         lineNumbers: localStorage.getItem('lineNumbers') !== 'false',
+        keybindings: localStorage.getItem('keybindings') || 'default',
+
+        // File system
+        files: [],
+        activeFile: 'main.py',
+        renamingFile: null,
+        renameValue: '',
+
         themes: [
             { id: 'dark', name: 'Dark (Default)', preview: '#1c2130' },
             { id: 'light', name: 'Light', preview: '#f8fafc' },
@@ -61,12 +332,78 @@ document.addEventListener('alpine:init', () => {
             { id: 'light-red', name: 'Light Red', preview: '#fff5f5' },
             { id: 'amoled', name: 'AMOLED', preview: '#000000' }
         ],
-        init() {
+
+        async init() {
             window.ideStateData = this;
             this.applyTheme();
             this.updateFontSize();
             this.updateLineNumbers();
+
+            // Load files from IDB
+            await migrateOldData();
+            let files = await getAllFiles();
+            if (files.length === 0) {
+                // First time - create default file
+                await saveFile('main.py', "print('Hello World')", true);
+                files = [{ filename: 'main.py', code: "print('Hello World')", active: true }];
+            }
+            this.files = files.map(f => ({ name: f.filename, active: f.active }));
+            const activeF = files.find(f => f.active);
+            this.activeFile = activeF ? activeF.filename : files[0].filename;
+
+            // Load active file into editor
+            const fileData = await getFile(this.activeFile);
+            if (fileData && globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.setValue(fileData.code);
+            }
+
+            // Apply keybindings
+            this.applyKeybindings();
         },
+
+        // ---- Feature Toggle Methods ----
+        toggleNewUI() {
+            this.newUI = !this.newUI;
+            localStorage.setItem('newUI', this.newUI);
+            if (!this.newUI) {
+                // Store previous sub-feature states before disabling
+                localStorage.setItem('_prevFeatureTabs', this.featureTabs);
+                localStorage.setItem('_prevFeaturePackages', this.featurePackages);
+                localStorage.setItem('_prevFeatureToasts', this.featureToasts);
+                this.featureTabs = false;
+                this.featurePackages = false;
+                this.featureToasts = false;
+            } else {
+                // Restore previous sub-feature states
+                this.featureTabs = localStorage.getItem('_prevFeatureTabs') !== 'false';
+                this.featurePackages = localStorage.getItem('_prevFeaturePackages') !== 'false';
+                this.featureToasts = localStorage.getItem('_prevFeatureToasts') !== 'false';
+            }
+            this.persistFeatureToggles();
+        },
+
+        toggleFeatureTabs() {
+            this.featureTabs = !this.featureTabs;
+            this.persistFeatureToggles();
+        },
+
+        toggleFeaturePackages() {
+            this.featurePackages = !this.featurePackages;
+            this.persistFeatureToggles();
+        },
+
+        toggleFeatureToasts() {
+            this.featureToasts = !this.featureToasts;
+            this.persistFeatureToggles();
+        },
+
+        persistFeatureToggles() {
+            localStorage.setItem('featureTabs', this.featureTabs);
+            localStorage.setItem('featurePackages', this.featurePackages);
+            localStorage.setItem('featureToasts', this.featureToasts);
+        },
+
+        // ---- Theme Methods ----
         setTheme(id) {
             this.theme = id;
             localStorage.setItem('theme', id);
@@ -101,6 +438,8 @@ document.addEventListener('alpine:init', () => {
                 }
             }
         },
+
+        // ---- Editor Methods ----
         updateFontSize() {
             localStorage.setItem('fontSize', this.fontSize);
             if (globalThis.myCodeMirror) {
@@ -121,10 +460,126 @@ document.addEventListener('alpine:init', () => {
                 globalThis.myCodeMirror.setOption('lineNumbers', this.lineNumbers);
             }
         },
+
+        // ---- Keybinding Methods ----
+        setKeybindings(mode) {
+            this.keybindings = mode;
+            localStorage.setItem('keybindings', mode);
+            this.applyKeybindings();
+        },
+        applyKeybindings() {
+            if (!globalThis.myCodeMirror) return;
+            globalThis.myCodeMirror.setOption('keyMap', this.keybindings);
+        },
+
+        // ---- File Management Methods ----
+        async switchFile(filename) {
+            if (filename === this.activeFile) return;
+            // Save current file first
+            await this.saveCurrentFile();
+            // Load new file
+            const file = await getFile(filename);
+            if (file && globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.setValue(file.code);
+            }
+            this.activeFile = filename;
+            this.files = this.files.map(f => ({ ...f, active: f.name === filename }));
+            await setActiveFile(filename);
+        },
+
+        async createNewFile() {
+            let name = 'untitled.py';
+            let counter = 1;
+            const existingNames = this.files.map(f => f.name);
+            while (existingNames.includes(name)) {
+                name = `untitled${counter}.py`;
+                counter++;
+            }
+            await this.saveCurrentFile();
+            await saveFile(name, '', true);
+            this.files.push({ name, active: true });
+            this.files = this.files.map(f => ({ ...f, active: f.name === name }));
+            this.activeFile = name;
+            if (globalThis.myCodeMirror) globalThis.myCodeMirror.setValue('');
+            await setActiveFile(name);
+            showToast(`Created ${name}`, 'success');
+        },
+
+        startRename(filename) {
+            this.renamingFile = filename;
+            this.renameValue = filename;
+        },
+
+        async finishRename() {
+            const oldName = this.renamingFile;
+            let newName = this.renameValue.trim();
+            this.renamingFile = null;
+            if (!newName || newName === oldName) return;
+            if (!newName.endsWith('.py')) newName += '.py';
+            if (this.files.some(f => f.name === newName)) {
+                showToast(`File "${newName}" already exists`, 'warning');
+                return;
+            }
+            // Get old file data
+            const fileData = await getFile(oldName);
+            const code = fileData ? fileData.code : '';
+            const wasActive = this.activeFile === oldName;
+            // Delete old, create new
+            await deleteFileFromDB(oldName);
+            await saveFile(newName, code, wasActive);
+            this.files = this.files.map(f =>
+                f.name === oldName ? { name: newName, active: wasActive } : f
+            );
+            if (wasActive) this.activeFile = newName;
+            showToast(`Renamed to ${newName}`, 'success');
+        },
+
+        cancelRename() {
+            this.renamingFile = null;
+        },
+
+        async deleteFile(filename) {
+            if (this.files.length <= 1) {
+                showToast('Cannot delete the last file', 'warning');
+                return;
+            }
+            if (!confirm(`Delete "${filename}"?`)) return;
+            await deleteFileFromDB(filename);
+            this.files = this.files.filter(f => f.name !== filename);
+            if (this.activeFile === filename) {
+                const newActive = this.files[0].name;
+                await this.switchFile(newActive);
+            }
+            showToast(`Deleted ${filename}`, 'info');
+        },
+
+        async saveCurrentFile() {
+            if (!globalThis.myCodeMirror) return;
+            await saveFile(this.activeFile, globalThis.myCodeMirror.getValue(), true);
+            globalThis.autosaveTime = Math.floor(Date.now() / 1000);
+        },
+
+        // ---- Packages Methods ----
+        openPackages() {
+            this.packagesOpen = true;
+            if (pythonWorker) {
+                pythonWorker.postMessage({ type: "LIST_PACKAGES" });
+            }
+        },
+
+        installPackage() {
+            const pkg = this.packageName.trim();
+            if (!pkg) return;
+            this.installingPackage = true;
+            pythonWorker.postMessage({ type: "INSTALL", package: pkg });
+            this.packageName = '';
+        },
+
+        // ---- System Maintenance ----
         clearCodeCache() {
-            const request = indexedDB.deleteDatabase('nuilithdb');
+            const request = indexedDB.deleteDatabase(DB_NAME);
             request.onsuccess = () => {
-                alert('Code cache cleared. Please reload to see default code.');
+                showToast('Code cache cleared. Please reload to see default code.', 'info');
             };
         },
         clearSiteCache() {
@@ -135,15 +590,24 @@ document.addEventListener('alpine:init', () => {
             this.theme = 'dark';
             this.fontSize = 16;
             this.lineNumbers = true;
+            this.keybindings = 'default';
+            this.newUI = true;
+            this.featureTabs = true;
+            this.featurePackages = true;
+            this.featureToasts = true;
             this.setTheme('dark');
             this.updateFontSize();
             if (!this.lineNumbers) this.toggleLineNumbers();
-            localStorage.clear();
-            alert('All settings reset to defaults.');
+            this.applyKeybindings();
+            this.persistFeatureToggles();
+            localStorage.setItem('newUI', true);
+            localStorage.setItem('keybindings', 'default');
+            showToast('All settings reset to defaults.', 'info');
         }
     }));
 });
 
+// ===== Window Load =====
 window.addEventListener('load', async () => {
     // 1. Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -247,7 +711,7 @@ window.addEventListener('load', async () => {
         extraKeys: {
             "Tab": (cm) => cm.replaceSelection("    ", "end"),
             "Ctrl-Enter": () => runcode(),
-            "Ctrl-S": (cm) => { saveToIDB(); return false; },
+            "Ctrl-S": (cm) => { saveCurrentFileDirect(); return false; },
             "Ctrl-Space": "autocomplete",
             "Esc": (cm) => cm.closeHint?.()
         }
@@ -260,7 +724,6 @@ window.addEventListener('load', async () => {
         }
     });
 
-    loadFromIDB();
     setupTimers();
 });
 
@@ -279,46 +742,21 @@ function stopcode() {
 }
 
 function setupTimers() {
-    setInterval(() => saveToIDB(), 30000);
+    setInterval(() => saveCurrentFileDirect(), 30000);
 }
 
-function saveToIDB() {
-    if (!myCodeMirror) return;
-    const request = indexedDB.open('nuilithdb', 1);
-    request.onupgradeneeded = (e) => {
-        if (!e.target.result.objectStoreNames.contains('autosave')) {
-            e.target.result.createObjectStore('autosave', { keyPath: 'id' });
-        }
-    };
-    request.onsuccess = (e) => {
-        const db = e.target.result;
-        const tx = db.transaction('autosave', 'readwrite');
-        tx.objectStore('autosave').put({ id: 1, code: myCodeMirror.getValue() });
-        tx.oncomplete = () => {
-            globalThis.autosaveTime = Math.floor(Date.now() / 1000);
-            db.close();
-        };
-    };
-}
-
-function loadFromIDB() {
-    const request = indexedDB.open('nuilithdb', 1);
-    request.onsuccess = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('autosave')) return;
-        const tx = db.transaction('autosave', 'readonly');
-        const getReq = tx.objectStore('autosave').get(1);
-        getReq.onsuccess = () => {
-            if (getReq.result && myCodeMirror) myCodeMirror.setValue(getReq.result.code);
-        };
-    };
+async function saveCurrentFileDirect() {
+    if (!myCodeMirror || !window.ideStateData) return;
+    await saveFile(window.ideStateData.activeFile, myCodeMirror.getValue(), true);
+    globalThis.autosaveTime = Math.floor(Date.now() / 1000);
 }
 
 function savecode() {
+    const filename = window.ideStateData ? window.ideStateData.activeFile : 'main.py';
     const blob = new Blob([myCodeMirror.getValue()], { type: 'text/x-python' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'main.py';
+    a.download = filename;
     a.click();
 }
 
@@ -331,5 +769,5 @@ async function loadcode() {
 }
 
 window.addEventListener('beforeunload', () => {
-    saveToIDB();
+    saveCurrentFileDirect();
 });

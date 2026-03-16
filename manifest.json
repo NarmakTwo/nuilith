@@ -1,0 +1,26 @@
+{
+    "name": "Nuilith Python IDE",
+    "short_name": "Nuilith",
+    "description": "Advanced browser-based Python IDE with multi-theme support, execution control, and customizable editor settings.",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "theme_color": "#1c2130",
+    "background_color": "#1c2130",
+    "icons": [
+        {
+            "src": "/assets/icon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/assets/icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "categories": ["developer tools", "productivity"],
+    "lang": "en"
+}

@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="google-site-verification" content="CpAng4m2FN9I3xtFIFi9GPz4MOLer0KbxNSsX8OgLrM" />
+        <meta name="theme-color" content="#1c2130" />
         <!-- openrouter tags -->
         <meta property="og:title" content="Nuilith IDE" />
         <meta property="og:description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
         <meta property="description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
         <meta property="og:image" content="/assets/icon.png" />
         <title>Nuilith Python IDE</title>
+
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="/manifest.json" />
+
         <!-- basic components -->
         <script src="/coi-serviceworker.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <script src="https://unpkg.com/codemirror@5.65.21/lib/codemirror.js"></script>
         <script src="https://unpkg.com/codemirror@5.65.21/mode/python/python.js"></script>
@@ -29,7 +35,7 @@
         <script src="https://unpkg.com/codemirror@5.65.21/addon/search/jump-to-line.js"></script>
         <script src="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.css">
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/move-lines.js"></script>
+        <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/closebrackets.js"></script>
         <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.css">
         <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/indent-fold.js"></script>
@@ -37,6 +43,10 @@
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/lint/lint.css">
         <script src="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.css">
+
+        <!-- codemirror keymaps -->
+        <script src="https://unpkg.com/codemirror@5.65.21/keymap/vim.js"></script>
+        <script src="https://unpkg.com/codemirror@5.65.21/keymap/emacs.js"></script>
 
         <link rel="icon" type="image/png" href="/assets/icon.png" />
         <link rel="stylesheet" type="text/css" href="style.css">
@@ -56,13 +66,18 @@
 
     </head>
     <body x-data="ideState" x-init="init()">
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="toast toast-end toast-top z-[100]" style="top: 1rem; right: 1rem;"></div>
+
+        <!-- Header -->
         <div class="flex items-center gap-4 m-2" id="info">
             <h1 class="text-2xl text-center bg-gray-800 border border-gray-700 pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
                 <img src="/assets/icon.png" class="w-10 h-10 inline-block mr-2" />
                 <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
             </h1>
 
-            <button @click="settingsOpen = true" class="p-2 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors shadow-lg">
+            <button @click="settingsOpen = true" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -70,6 +85,8 @@
             </button>
             
         </div>
+
+        <!-- Main IDE Layout -->
         <div class="flex w-full overflow-hidden" style="height: calc(100vh - 120px); margin-top: 10px;" id="doublepanel">
             
             <style>
@@ -104,20 +121,57 @@
                 }
             </style>
         
+            <!-- LEFT PANE: Editor -->
             <div id="left-pane" class="w-1/2 h-full border-r-4 border-gray-700 pane">
                 <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-left">
                     <ol class="flex flex-row p-2 items-center justify-between">
-                        <li class="items-center justify-center text-center">
-                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700">main.py</p>
+
+                        <!-- File Tab Bar (feature-gated) -->
+                        <li x-show="newUI && featureTabs" class="flex items-center gap-1 overflow-x-auto tab-scroll mr-2" style="max-width: 50%;">
+                            <template x-for="f in files" :key="f.name">
+                                <div class="flex items-center">
+                                    <!-- Rename Mode -->
+                                    <template x-if="renamingFile === f.name">
+                                        <input type="text" x-model="renameValue" 
+                                               @keydown.enter="finishRename()" 
+                                               @keydown.escape="cancelRename()"
+                                               @blur="finishRename()"
+                                               x-init="$nextTick(() => $el.focus())"
+                                               class="input input-xs input-bordered w-24 bg-gray-700 text-white text-xs" />
+                                    </template>
+                                    <!-- Normal Tab -->
+                                    <template x-if="renamingFile !== f.name">
+                                        <button @click="switchFile(f.name)" 
+                                                @dblclick="startRename(f.name)"
+                                                :class="activeFile === f.name ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+                                                class="btn btn-xs rounded-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap">
+                                            <span x-text="f.name"></span>
+                                            <span x-show="files.length > 1" @click.stop="deleteFile(f.name)" class="ml-1 opacity-50 hover:opacity-100 cursor-pointer">&times;</span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </template>
+                            <!-- Add file button -->
+                            <button @click="createNewFile()" class="btn btn-xs btn-ghost text-gray-400 hover:text-white" title="New file">+</button>
                         </li>
-                        <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="loadcode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import</button></li>
-                        <li><button class="flex w-25 h-7 rounded-lg text-white border-2 border-white items-center" onclick="savecode();"><img class="w-5 h-5 ml-1 mr-2 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export</button></li>
-                        <li>
+
+                        <!-- Classic single-file tab (shown when tabs are off) -->
+                        <li x-show="!newUI || !featureTabs" class="items-center justify-center text-center">
+                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700" x-text="activeFile"></p>
+                        </li>
+
+                        <li class="flex items-center gap-2">
+                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="loadcode();">
+                                <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import
+                            </button>
+                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="savecode();">
+                                <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export
+                            </button>
                             <template x-if="!running">
-                                <button class="w-15 h-7 rounded-lg text-white clickbutton" id="runbutton" onclick="runcode();">Run</button>
+                                <button class="btn btn-xs btn-primary" id="runbutton" onclick="runcode();">Run</button>
                             </template>
                             <template x-if="running">
-                                <button class="w-15 h-7 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors" id="stopbutton" onclick="stopcode();">Stop</button>
+                                <button class="btn btn-xs btn-error" id="stopbutton" onclick="stopcode();">Stop</button>
                             </template>
                         </li>
                     </ol>
@@ -127,32 +181,82 @@
         
             <div id="divider" class="pane-divider"></div>
         
+            <!-- RIGHT PANE: Output -->
             <div id="output" class="w-1/2 h-full pane">
                 <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-right">
                     <ol class="flex flex-row p-2 items-center justify-between">
                         <li class="items-center justify-center text-center">
                             <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700">Output</p>
                         </li>
-                        <li><button class="w-15 h-7 rounded-lg text-white border-2 border-white" onclick="term.clear();">Clear</button></li>
+                        <li class="flex items-center gap-2">
+                            <!-- Packages button (feature-gated) -->
+                            <template x-if="newUI && featurePackages">
+                                <button @click="openPackages()" class="btn btn-xs btn-outline btn-accent text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    Packages
+                                </button>
+                            </template>
+                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="term.clear();">Clear</button>
+                        </li>
                     </ol>
                 </div>
                 <div id="terminal"></div>
             </div>
         </div>
 
-        <!-- Settings Modal -->
+        <!-- ============ SETTINGS MODAL ============ -->
         <div x-show="settingsOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
             <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/80" @click.away="settingsOpen = false">
                 <div class="p-6 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
                     <h2 class="text-2xl font-bold text-white">Settings</h2>
-                    <button @click="settingsOpen = false" class="text-gray-400 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button @click="settingsOpen = false" class="btn btn-circle btn-ghost btn-sm text-gray-400 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
                 <div class="p-6 space-y-8">
+
+                    <!-- Features Section -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Features</h3>
+                        <div class="space-y-3">
+                            <!-- New UI master toggle -->
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl">
+                                <div>
+                                    <p class="text-white font-medium">New UI</p>
+                                    <p class="text-gray-500 text-xs">DaisyUI-styled buttons and components</p>
+                                </div>
+                                <input type="checkbox" class="toggle toggle-primary" :checked="newUI" @change="toggleNewUI()" />
+                            </div>
+                            <!-- Tabbed Editor -->
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                                <div>
+                                    <p class="text-white font-medium">Tabbed Editor</p>
+                                    <p class="text-gray-500 text-xs">Multi-file editing with tabs</p>
+                                </div>
+                                <input type="checkbox" class="toggle toggle-primary" :checked="featureTabs" @change="toggleFeatureTabs()" :disabled="!newUI" />
+                            </div>
+                            <!-- Package Manager -->
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                                <div>
+                                    <p class="text-white font-medium">Package Manager</p>
+                                    <p class="text-gray-500 text-xs">Install Python packages via micropip</p>
+                                </div>
+                                <input type="checkbox" class="toggle toggle-primary" :checked="featurePackages" @change="toggleFeaturePackages()" :disabled="!newUI" />
+                            </div>
+                            <!-- Toast Notifications -->
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                                <div>
+                                    <p class="text-white font-medium">Toast Notifications</p>
+                                    <p class="text-gray-500 text-xs">Non-blocking toasts instead of alert popups</p>
+                                </div>
+                                <input type="checkbox" class="toggle toggle-primary" :checked="featureToasts" @change="toggleFeatureToasts()" :disabled="!newUI" />
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Themes Section -->
                     <section>
                         <h3 class="text-lg font-semibold text-gray-300 mb-4">Themes</h3>
@@ -169,34 +273,94 @@
                     </section>
 
                     <!-- Editor Preferences -->
-                    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-300 mb-4">Font Size</h3>
-                            <div class="flex items-center gap-4">
-                                <input type="range" min="10" max="30" x-model="fontSize" @input="updateFontSize()" class="flex-1 accent-blue-500">
-                                <span class="text-white w-8 text-center" x-text="fontSize + 'px'"></span>
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Editor</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Font Size -->
+                            <div>
+                                <label class="text-sm text-gray-400 mb-2 block">Font Size</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="range" min="10" max="30" x-model="fontSize" @input="updateFontSize()" class="range range-primary range-xs flex-1">
+                                    <span class="text-white w-10 text-center text-sm badge badge-neutral" x-text="fontSize + 'px'"></span>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-300 mb-4">Line Numbers</h3>
-                            <button @click="toggleLineNumbers()" 
-                                    :class="lineNumbers ? 'bg-blue-600' : 'bg-gray-700'"
-                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none">
-                                <span :class="lineNumbers ? 'translate-x-6' : 'translate-x-1'"
-                                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
-                            </button>
+                            <!-- Line Numbers -->
+                            <div>
+                                <label class="text-sm text-gray-400 mb-2 block">Line Numbers</label>
+                                <input type="checkbox" class="toggle toggle-primary" :checked="lineNumbers" @change="toggleLineNumbers()" />
+                            </div>
+                            <!-- Keybindings -->
+                            <div>
+                                <label class="text-sm text-gray-400 mb-2 block">Keybindings</label>
+                                <select class="select select-bordered select-sm bg-gray-800 text-white w-full" x-model="keybindings" @change="setKeybindings(keybindings)">
+                                    <option value="default">Default</option>
+                                    <option value="vim">Vim</option>
+                                    <option value="emacs">Emacs</option>
+                                </select>
+                            </div>
                         </div>
                     </section>
 
                     <!-- System Maintenance -->
                     <section>
                         <h3 class="text-lg font-semibold text-gray-300 mb-4">System Maintenance</h3>
-                        <div class="flex flex-wrap gap-4">
-                            <button @click="clearCodeCache()" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors">Clear Code Cache</button>
-                            <button @click="clearSiteCache()" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors">Clear Site Cache</button>
-                            <button @click="resetToDefaults()" class="px-4 py-2 bg-red-900/40 border border-red-800 rounded-lg text-sm text-red-200 hover:bg-red-900/60 transition-colors">Reset All to Defaults</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button @click="clearCodeCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Code Cache</button>
+                            <button @click="clearSiteCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Site Cache</button>
+                            <button @click="resetToDefaults()" class="btn btn-sm btn-outline btn-error text-red-200">Reset All to Defaults</button>
                         </div>
                     </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ PACKAGES MODAL ============ -->
+        <div x-show="packagesOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
+            <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl shadow-black/80" @click.away="packagesOpen = false">
+                <div class="p-5 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Package Manager
+                    </h2>
+                    <button @click="packagesOpen = false" class="btn btn-circle btn-ghost btn-sm text-gray-400 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <!-- Install input -->
+                    <div class="flex gap-2">
+                        <input type="text" x-model="packageName" 
+                               @keydown.enter="installPackage()" 
+                               placeholder="Package name (e.g. requests)" 
+                               class="input input-bordered input-sm flex-1 bg-gray-800 text-white placeholder-gray-500" />
+                        <button @click="installPackage()" class="btn btn-sm btn-primary" :disabled="installingPackage || !packageName.trim()">
+                            <template x-if="installingPackage">
+                                <span class="loading loading-spinner loading-xs"></span>
+                            </template>
+                            <template x-if="!installingPackage">
+                                <span>Install</span>
+                            </template>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500">Uses micropip — works with pure-Python PyPI packages.</p>
+
+                    <!-- Installed packages list -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-400 mb-2">Installed Packages</h4>
+                        <div class="max-h-48 overflow-y-auto space-y-1">
+                            <template x-if="installedPackages.length === 0">
+                                <p class="text-gray-600 text-sm italic">Loading packages...</p>
+                            </template>
+                            <template x-for="pkg in installedPackages" :key="pkg">
+                                <div class="flex items-center justify-between px-3 py-1.5 bg-gray-800 rounded-lg text-sm">
+                                    <span class="text-gray-300 font-mono text-xs" x-text="pkg"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
