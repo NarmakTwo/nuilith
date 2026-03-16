@@ -3,7 +3,7 @@
  * Handlers: Offline Cache + Synchronous Input Bridge
  */
 
-const CACHE_NAME = 'nuilith-cache-v8';
+const CACHE_NAME = 'nuilith-cache-v9';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [
@@ -66,6 +66,9 @@ const CDN_ASSETS = [
 
     // Alpine.js
     'https://unpkg.com/alpinejs',
+    
+    // JSZip
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
 
     // jQuery + jQuery Terminal
     'https://unpkg.com/jquery@4.0.0/dist/jquery.js',

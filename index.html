@@ -63,6 +63,7 @@
 
         <!-- code and terminal stuff -->
         <script src="https://unpkg.com/jquery@4.0.0/dist/jquery.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.45.2/css/jquery.terminal.css">
         <script src="https://unpkg.com/jquery.terminal@2.45.2/js/jquery.terminal.js"></script>
         <script src="https://unpkg.com/jquery.terminal@2.45.2/js/echo_newline.js"></script>
@@ -93,6 +94,56 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             </button>
+
+            <!-- Project Action Modal -->
+        <dialog id="project_action_modal" class="modal">
+            <div class="modal-box bg-gray-800 border border-gray-700 text-white shadow-2xl">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span x-text="projectActionTitle"></span>
+                </h3>
+                <p class="py-4" x-text="projectActionMessage"></p>
+                
+                <template x-if="projectActionType === 'prompt'">
+                    <input type="text" id="project_action_input" x-model="projectActionInput" class="input input-bordered w-full bg-gray-900 border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white" @keyup.enter="submitProjectAction()">
+                </template>
+
+                <div class="modal-action mt-6 gap-2">
+                    <button class="btn btn-ghost hover:bg-gray-700" @click="document.getElementById('project_action_modal').close()">Cancel</button>
+                    <button class="btn" :class="projectActionType === 'delete' ? 'btn-error hover:bg-red-600' : 'btn-primary hover:bg-blue-600'" @click="submitProjectAction()" x-text="projectActionSubmitText"></button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+
+            <!-- Projects Dropdown -->
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </div>
+                <ul tabindex="0" class="dropdown-content z-[100] menu p-2 shadow bg-gray-800 rounded-box w-56 text-white border border-gray-700 mt-2">
+                    <li class="menu-title text-gray-400">
+                        <span class="flex justify-between items-center w-full">Projects <span class="badge badge-sm badge-neutral" x-text="projectsList.length"></span></span>
+                    </li>
+                    <div class="max-h-48 overflow-y-auto">
+                        <template x-for="proj in projectsList" :key="proj">
+                            <li>
+                                <a @mousedown.prevent="switchProject(proj); document.activeElement.blur();" :class="currentProject === proj ? 'bg-blue-600 font-bold' : ''" class="flex items-center gap-2 cursor-pointer">
+                                    <svg x-show="currentProject === proj" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                    <svg x-show="currentProject !== proj" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                    <span x-text="proj" class="truncate max-w-[140px]"></span>
+                                </a>
+                            </li>
+                        </template>
+                    </div>
+                    <div class="divider my-1 before:bg-gray-700 after:bg-gray-700"></div>
+                    <li><a @mousedown.prevent="openProjectAction('new');" class="cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg> New Project</a></li>
+                    <li><a @mousedown.prevent="openProjectAction('rename');" class="cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Rename Current Project</a></li>
+                    <li><a @mousedown.prevent="openProjectAction('delete');" class="text-red-400 hover:bg-red-900/50 hover:text-red-200 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete Project</a></li>
+                </ul>
+            </div>
             
         </div>
 
@@ -185,12 +236,19 @@
                                 <svg x-show="zenMode"  xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>
                             </button>
 
-                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="loadcode();">
+                            <button class="btn btn-xs btn-outline btn-neutral text-white" @click="loadcode();">
                                 <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import
                             </button>
-                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="savecode();">
-                                <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export
-                            </button>
+                            
+                            <div class="dropdown dropdown-end">
+                                <div tabindex="0" role="button" class="btn btn-xs btn-outline btn-neutral text-white m-0">
+                                    <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export
+                                </div>
+                                <ul tabindex="0" class="dropdown-content z-[200] menu p-1 shadow bg-gray-800 rounded-box w-44 text-white border border-gray-700 mt-1 space-y-1">
+                                    <li><a @mousedown.prevent="savecode(); document.activeElement.blur();" class="text-xs p-2.5 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export File (.py)</a></li>
+                                    <li><a @mousedown.prevent="exportProject(); document.activeElement.blur();" class="text-xs p-2.5 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Export Project (.nu)</a></li>
+                                </ul>
+                            </div>
                             <template x-if="!running">
                                 <button class="btn btn-xs btn-primary" id="runbutton" onclick="runcode();">Run</button>
                             </template>
@@ -395,6 +453,29 @@
                 </div>
             </div>
         </div>
-        
+        <!-- ============ COLLISION MODAL ============ -->
+        <dialog id="project_collision_modal" class="modal modal-bottom sm:modal-middle">
+            <div class="modal-box bg-gray-900 border border-gray-700">
+                <h3 class="font-bold text-lg text-white" x-text="'Project \''+collisionProjectName+'\' already exists'"></h3>
+                <p class="py-4 text-gray-400">A project with this name already exists in your workspace. Do you want to overwrite it, or import it as a new copy with a different name?</p>
+                <div class="modal-action">
+                    <form method="dialog" class="flex gap-2 w-full justify-between items-center">
+                        <div>
+                            <input type="text" x-model="renameProjectInput" class="input input-sm input-bordered bg-gray-800 text-white border-gray-600" placeholder="New name" />
+                            <button @click="resolveCollision('rename')" class="btn btn-sm btn-info ml-2">Rename Copy</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="resolveCollision('cancel')" class="btn btn-sm btn-ghost text-gray-400">Cancel</button>
+                            <button @click="resolveCollision('overwrite')" class="btn btn-sm btn-error">Overwrite</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button @click="resolveCollision('cancel')">close</button>
+            </form>
+        </dialog>
+
     </body>
 </html>
+```

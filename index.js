@@ -12,18 +12,16 @@ let lintRequestId = 0;
 
 // ===== IDB Constants =====
 const DB_NAME = 'nuilithdb';
-const DB_VERSION = 2;
-const FILES_STORE = 'files';
-const OLD_STORE = 'autosave';
+const DB_VERSION = 3;
+const PROJECTS_STORE = 'projects';
+let openFilesDB = null;
 
 // ===== Toast System =====
 function showToast(message, type = 'info') {
-    // check if feature is enabled
     if (window.ideStateData && !window.ideStateData.featureToasts) {
         alert(message);
         return;
     }
-
     const container = document.getElementById('toast-container');
     if (!container) { alert(message); return; }
 
@@ -39,216 +37,16 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `<span>${message}</span>`;
     container.appendChild(toast);
 
-    // Animate in
     requestAnimationFrame(() => {
         toast.classList.remove('opacity-0', 'translate-x-4');
         toast.classList.add('opacity-100', 'translate-x-0');
     });
 
-    // Auto-remove after 3 seconds
     setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-x-4');
         toast.classList.remove('opacity-100', 'translate-x-0');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
-
-// ===== IndexedDB File System =====
-function openFilesDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-        request.onupgradeneeded = (e) => {
-            const db = e.target.result;
-
-            // Create new files store if it doesn't exist
-            if (!db.objectStoreNames.contains(FILES_STORE)) {
-                db.createObjectStore(FILES_STORE, { keyPath: 'filename' });
-            }
-        };
-
-        request.onsuccess = (e) => {
-            const db = e.target.result;
-            // Defensive: if the files store doesn't exist (stale DB), 
-            // delete and re-create to trigger onupgradeneeded
-            if (!db.objectStoreNames.contains(FILES_STORE)) {
-                db.close();
-                const delReq = indexedDB.deleteDatabase(DB_NAME);
-                delReq.onsuccess = () => {
-                    // Re-open, this time onupgradeneeded will fire
-                    const retry = indexedDB.open(DB_NAME, DB_VERSION);
-                    retry.onupgradeneeded = (ev) => {
-                        const newDb = ev.target.result;
-                        if (!newDb.objectStoreNames.contains(FILES_STORE)) {
-                            newDb.createObjectStore(FILES_STORE, { keyPath: 'filename' });
-                        }
-                    };
-                    retry.onsuccess = (ev) => resolve(ev.target.result);
-                    retry.onerror = (ev) => reject(ev.target.error);
-                };
-                delReq.onerror = () => reject(new Error('Failed to delete stale DB'));
-                return;
-            }
-            resolve(db);
-        };
-
-        request.onerror = (e) => reject(e.target.error);
-    });
-}
-
-async function migrateOldData() {
-    try {
-        // Try opening old DB version to read data
-        const oldReq = indexedDB.open(DB_NAME, DB_VERSION);
-        const db = await new Promise((resolve, reject) => {
-            oldReq.onsuccess = (e) => resolve(e.target.result);
-            oldReq.onerror = (e) => reject(e.target.error);
-        });
-
-        if (!db.objectStoreNames.contains(OLD_STORE)) {
-            db.close();
-            return null;
-        }
-
-        // Check if files store already has data
-        const tx = db.transaction([FILES_STORE], 'readonly');
-        const filesStore = tx.objectStore(FILES_STORE);
-        const count = await new Promise((resolve) => {
-            const req = filesStore.count();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve(0);
-        });
-
-        if (count > 0) {
-            db.close();
-            return null; // Already migrated
-        }
-
-        // Read old autosave data
-        const oldTx = db.transaction([OLD_STORE], 'readonly');
-        const oldStore = oldTx.objectStore(OLD_STORE);
-        const oldData = await new Promise((resolve) => {
-            const req = oldStore.get(1);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve(null);
-        });
-
-        if (oldData && oldData.code) {
-            // Write to new files store
-            const writeTx = db.transaction([FILES_STORE], 'readwrite');
-            writeTx.objectStore(FILES_STORE).put({
-                filename: 'main.py',
-                code: oldData.code,
-                active: true
-            });
-            await new Promise((resolve, reject) => {
-                writeTx.oncomplete = resolve;
-                writeTx.onerror = reject;
-            });
-        }
-
-        db.close();
-        return oldData?.code || null;
-    } catch (err) {
-        console.warn('Migration check failed (OK on first load):', err);
-        return null;
-    }
-}
-
-async function getAllFiles() {
-    try {
-        const db = await openFilesDB();
-        const tx = db.transaction(FILES_STORE, 'readonly');
-        const store = tx.objectStore(FILES_STORE);
-        const files = await new Promise((resolve) => {
-            const req = store.getAll();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve([]);
-        });
-        db.close();
-        return files;
-    } catch {
-        return [];
-    }
-}
-
-async function getFile(filename) {
-    try {
-        const db = await openFilesDB();
-        const tx = db.transaction(FILES_STORE, 'readonly');
-        const store = tx.objectStore(FILES_STORE);
-        const file = await new Promise((resolve) => {
-            const req = store.get(filename);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve(null);
-        });
-        db.close();
-        return file;
-    } catch {
-        return null;
-    }
-}
-
-async function saveFile(filename, code, active = false) {
-    try {
-        const db = await openFilesDB();
-        const tx = db.transaction(FILES_STORE, 'readwrite');
-        tx.objectStore(FILES_STORE).put({ filename, code, active });
-        await new Promise((resolve, reject) => {
-            tx.oncomplete = resolve;
-            tx.onerror = reject;
-        });
-        db.close();
-    } catch (err) {
-        console.error('Error saving file:', err);
-    }
-}
-
-async function deleteFileFromDB(filename) {
-    try {
-        const db = await openFilesDB();
-        const tx = db.transaction(FILES_STORE, 'readwrite');
-        const store = tx.objectStore(FILES_STORE);
-        
-        // Use a request to check if it exists or just try deleting
-        // delete() in IDB doesn't throw if key missing, but we'll be careful
-        store.delete(filename);
-        
-        await new Promise((resolve, reject) => {
-            tx.oncomplete = resolve;
-            tx.onerror = (e) => {
-                console.warn('Delete transaction failed:', e.target.error);
-                resolve(); // Don't crash the UI if delete fails
-            };
-        });
-        db.close();
-    } catch (err) {
-        console.error('Error deleting file:', err);
-    }
-}
-
-async function setActiveFile(filename) {
-    try {
-        const db = await openFilesDB();
-        const tx = db.transaction(FILES_STORE, 'readwrite');
-        const store = tx.objectStore(FILES_STORE);
-        const all = await new Promise((resolve) => {
-            const req = store.getAll();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => resolve([]);
-        });
-        for (const f of all) {
-            f.active = (f.filename === filename);
-            store.put(f);
-        }
-        await new Promise((resolve, reject) => {
-            tx.oncomplete = resolve;
-            tx.onerror = reject;
-        });
-        db.close();
-    } catch (err) {
-        console.error('Error setting active file:', err);
-    }
 }
 
 // ===== Worker Init =====
@@ -343,6 +141,18 @@ document.addEventListener('alpine:init', () => {
         lineNumbers: localStorage.getItem('lineNumbers') !== 'false',
         keybindings: localStorage.getItem('keybindings') || 'default',
 
+        // Project system (.nu)
+        currentProject: localStorage.getItem('currentProject') || 'default',
+        projectsList: [],
+
+        // Project Action Modal State
+        projectActionTitle: '',
+        projectActionMessage: '',
+        projectActionType: '',
+        projectActionSubmitText: '',
+        projectActionCallback: null,
+        projectActionInput: '',
+
         // File system
         files: [],
         activeFile: 'main.py',
@@ -374,36 +184,245 @@ document.addEventListener('alpine:init', () => {
             this.updateFontSize();
             this.updateLineNumbers();
 
-            // Load installed packages from localStorage
-            const savedPackages = localStorage.getItem('installedPackages');
-            if (savedPackages) {
-                try {
-                    this.installedPackages = JSON.parse(savedPackages);
-                } catch (e) {
-                    console.error('Failed to parse saved packages', e);
-                }
-            }
+            await this.initDB();
+            await this.loadProjectList();
+            await this.switchProject(this.currentProject, true); // true = isFirstLoad
 
-            // Load files from IDB
-            await migrateOldData();
-            let files = await getAllFiles();
-            if (files.length === 0) {
-                // First time - create default file
-                await saveFile('main.py', "print('Hello World')", true);
-                files = [{ filename: 'main.py', code: "print('Hello World')", active: true }];
-            }
-            this.files = files.map(f => ({ name: f.filename, active: f.active }));
-            const activeF = files.find(f => f.active);
-            this.activeFile = activeF ? activeF.filename : files[0].filename;
-
-            // Load active file into editor
-            const fileData = await getFile(this.activeFile);
-            if (fileData && globalThis.myCodeMirror) {
-                globalThis.myCodeMirror.setValue(fileData.code);
-            }
-
-            // Apply keybindings
             this.applyKeybindings();
+        },
+
+        // ---- Database & Project System ----
+        async initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.createObjectStore('files', { keyPath: 'filename' }); // Legacy flat store
+                    }
+                    if (!db.objectStoreNames.contains(PROJECTS_STORE)) {
+                        db.createObjectStore(PROJECTS_STORE, { keyPath: 'projectName' }); // New multi-project store
+                    }
+                };
+                request.onsuccess = async (event) => {
+                    openFilesDB = event.target.result;
+                    
+                    // Migration check:
+                    const pTx = openFilesDB.transaction([PROJECTS_STORE], 'readonly');
+                    const defReq = pTx.objectStore(PROJECTS_STORE).get('default');
+                    
+                    defReq.onsuccess = async () => {
+                        if (!defReq.result) {
+                            console.log("Migrating legacy flat files to 'default' project...");
+                            const fTx = openFilesDB.transaction(['files'], 'readonly');
+                            const allFilesReq = fTx.objectStore('files').getAll();
+                            allFilesReq.onsuccess = () => {
+                                let filesToMigrate = allFilesReq.result || [];
+                                if (filesToMigrate.length === 0) {
+                                    filesToMigrate = [{ filename: 'main.py', active: true, code: 'print("Hello World")' }];
+                                }
+                                
+                                // Mapping old {filename, code, active} -> new {name, code, active} 
+                                // to match our updated memory structure
+                                const mappedFiles = filesToMigrate.map(f => ({ name: f.filename, active: f.active, code: f.code }));
+                                const packagesToMigrate = JSON.parse(localStorage.getItem('installedPackages') || '[]');
+                                
+                                const wTx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                                wTx.objectStore(PROJECTS_STORE).put({
+                                    projectName: 'default',
+                                    files: mappedFiles,
+                                    packages: packagesToMigrate
+                                });
+                                wTx.oncomplete = () => resolve();
+                            };
+                        } else {
+                            resolve(); // Already migrated
+                        }
+                    };
+                };
+                request.onerror = (e) => reject(e);
+            });
+        },
+
+        async loadProjectList() {
+            return new Promise(resolve => {
+                const tx = openFilesDB.transaction([PROJECTS_STORE], 'readonly');
+                const req = tx.objectStore(PROJECTS_STORE).getAllKeys();
+                req.onsuccess = () => {
+                    this.projectsList = req.result || ['default'];
+                    resolve();
+                }
+            });
+        },
+
+        async saveCurrentProjectToDB() {
+            if (!openFilesDB) return;
+            if (globalThis.myCodeMirror) {
+                const idx = this.files.findIndex(f => f.name === this.activeFile);
+                if (idx > -1) this.files[idx].code = globalThis.myCodeMirror.getValue();
+            }
+            return new Promise(resolve => {
+                const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                tx.objectStore(PROJECTS_STORE).put({
+                    projectName: this.currentProject,
+                    files: JSON.parse(JSON.stringify(this.files)),
+                    packages: JSON.parse(JSON.stringify(this.installedPackages))
+                });
+                tx.oncomplete = () => resolve();
+            });
+        },
+
+        async switchProject(projName, isFirstLoad = false) {
+            if (!isFirstLoad && this.currentProject === projName) return;
+            if (!isFirstLoad) await this.saveCurrentProjectToDB();
+            
+            this.currentProject = projName;
+            localStorage.setItem('currentProject', projName);
+            
+            await new Promise(resolve => {
+                const tx = openFilesDB.transaction([PROJECTS_STORE], 'readonly');
+                const req = tx.objectStore(PROJECTS_STORE).get(this.currentProject);
+                req.onsuccess = () => {
+                    if (req.result) {
+                        this.files = req.result.files;
+                        this.installedPackages = req.result.packages || [];
+                        localStorage.setItem('installedPackages', JSON.stringify(this.installedPackages));
+                        
+                        const activeF = this.files.find(f => f.active);
+                        this.activeFile = activeF ? activeF.name : this.files[0].name;
+                        if (globalThis.myCodeMirror) {
+                            const target = this.files.find(f => f.name === this.activeFile);
+                            globalThis.myCodeMirror.setValue(target ? target.code : '');
+                        }
+                    } else {
+                        // Safe fallback
+                        this.files = [{ name: 'main.py', active: true, code: 'print("Hello World")' }];
+                        this.installedPackages = [];
+                    }
+                    resolve();
+                };
+            });
+
+            // Re-install packages for new project seamlessly
+            if (globalThis.pythonWorker && this.installedPackages.length > 0) {
+                globalThis.pythonWorker.postMessage({ type: "INSTALL", package: this.installedPackages, isSilent: true });
+            }
+            
+            if (!isFirstLoad) showToast(`Switched to project: ${projName}`, 'success');
+        },
+
+        openProjectAction(action, target = null) {
+            document.activeElement.blur(); // Dropdown cleanup
+            if (action === 'new') {
+                this.projectActionTitle = 'New Project';
+                this.projectActionMessage = 'Enter new project name:';
+                this.projectActionType = 'prompt';
+                this.projectActionInput = '';
+                this.projectActionSubmitText = 'Create';
+                this.projectActionCallback = async () => {
+                    const newName = this.projectActionInput.trim();
+                    if (!newName) return;
+                    if (this.projectsList.includes(newName)) {
+                        showToast('Project already exists!', 'error');
+                        return;
+                    }
+                    await this.saveCurrentProjectToDB();
+                    const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                    tx.objectStore(PROJECTS_STORE).put({
+                        projectName: newName,
+                        files: [{ name: 'main.py', active: true, code: '# New Project' }],
+                        packages: []
+                    });
+                    tx.oncomplete = async () => {
+                        await this.loadProjectList();
+                        this.switchProject(newName);
+                    };
+                    document.getElementById('project_action_modal').close();
+                };
+            } else if (action === 'rename') {
+                this.projectActionTitle = 'Rename Project';
+                this.projectActionMessage = `Rename project "${this.currentProject}" to:`;
+                this.projectActionType = 'prompt';
+                this.projectActionInput = this.currentProject;
+                this.projectActionSubmitText = 'Rename';
+                this.projectActionCallback = async () => {
+                    const newName = this.projectActionInput.trim();
+                    if (!newName || newName === this.currentProject) return;
+                    if (this.projectsList.includes(newName)) {
+                        showToast('Name taken!', 'error');
+                        return;
+                    }
+                    await this.saveCurrentProjectToDB();
+                    const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                    const store = tx.objectStore(PROJECTS_STORE);
+                    const getReq = store.get(this.currentProject);
+                    getReq.onsuccess = () => {
+                        const data = getReq.result;
+                        data.projectName = newName;
+                        store.put(data);
+                        store.delete(this.currentProject);
+                    };
+                    tx.oncomplete = async () => {
+                        this.currentProject = newName;
+                        localStorage.setItem('currentProject', newName);
+                        await this.loadProjectList();
+                        showToast(`Project renamed to ${newName}`, 'success');
+                    };
+                    document.getElementById('project_action_modal').close();
+                };
+            } else if (action === 'delete') {
+                if (this.projectsList.length <= 1) {
+                    showToast('Cannot delete the only project.', 'error');
+                    return;
+                }
+                this.projectActionTitle = 'Delete Project';
+                this.projectActionMessage = `Are you sure you want to delete project "${this.currentProject}"? This action cannot be undone.`;
+                this.projectActionType = 'delete';
+                this.projectActionSubmitText = 'Delete';
+                this.projectActionCallback = async () => {
+                    const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                    tx.objectStore(PROJECTS_STORE).delete(this.currentProject);
+                    tx.oncomplete = async () => {
+                        await this.loadProjectList();
+                        const newProj = this.projectsList[0];
+                        this.currentProject = newProj;
+                        localStorage.setItem('currentProject', newProj);
+                        this.switchProject(newProj, true);
+                        showToast('Project deleted', 'success');
+                    };
+                    document.getElementById('project_action_modal').close();
+                };
+            } else if (action === 'delete-file') {
+                if (this.files.length <= 1) {
+                    showToast('Cannot delete the last file', 'warning');
+                    return;
+                }
+                this.projectActionTitle = 'Delete File';
+                this.projectActionMessage = `Are you sure you want to delete file "${target}"?`;
+                this.projectActionType = 'delete';
+                this.projectActionSubmitText = 'Delete';
+                this.projectActionCallback = async () => {
+                    if (this.activeFile === target) {
+                        const newActive = this.files.find(f => f.name !== target).name;
+                        await this.switchFile(newActive);
+                    }
+                    this.files = this.files.filter(f => f.name !== target);
+                    await this.saveCurrentProjectToDB();
+                    showToast(`Deleted ${target}`, 'info');
+                    document.getElementById('project_action_modal').close();
+                };
+            }
+            document.getElementById('project_action_modal').showModal();
+            // Automatically focus input if it's a prompt
+            if (this.projectActionType === 'prompt') {
+                setTimeout(() => document.getElementById('project_action_input').focus(), 100);
+            }
+        },
+        
+        submitProjectAction() {
+            if (this.projectActionCallback) {
+                this.projectActionCallback();
+            }
         },
 
         // ---- Feature Toggle Methods ----
@@ -531,16 +550,15 @@ document.addEventListener('alpine:init', () => {
         // ---- File Management Methods ----
         async switchFile(filename) {
             if (filename === this.activeFile) return;
-            // Save current file first
-            await this.saveCurrentFile();
-            // Load new file
-            const file = await getFile(filename);
+            await this.saveCurrentFile(); // saves to code mirror and pushes to DB
+            
+            const file = this.files.find(f => f.name === filename);
             if (file && globalThis.myCodeMirror) {
                 globalThis.myCodeMirror.setValue(file.code);
             }
             this.activeFile = filename;
             this.files = this.files.map(f => ({ ...f, active: f.name === filename }));
-            await setActiveFile(filename);
+            await this.saveCurrentProjectToDB();
         },
 
         async createNewFile() {
@@ -552,12 +570,11 @@ document.addEventListener('alpine:init', () => {
                 counter++;
             }
             await this.saveCurrentFile();
-            await saveFile(name, '', true);
-            this.files.push({ name, active: true });
+            this.files.push({ name, active: true, code: '' });
             this.files = this.files.map(f => ({ ...f, active: f.name === name }));
             this.activeFile = name;
             if (globalThis.myCodeMirror) globalThis.myCodeMirror.setValue('');
-            await setActiveFile(name);
+            await this.saveCurrentProjectToDB();
             showToast(`Created ${name}`, 'success');
         },
 
@@ -576,17 +593,13 @@ document.addEventListener('alpine:init', () => {
                 showToast(`File "${newName}" already exists`, 'warning');
                 return;
             }
-            // Get old file data
-            const fileData = await getFile(oldName);
-            const code = fileData ? fileData.code : '';
+            
             const wasActive = this.activeFile === oldName;
-            // Delete old, create new
-            await deleteFileFromDB(oldName);
-            await saveFile(newName, code, wasActive);
             this.files = this.files.map(f =>
-                f.name === oldName ? { name: newName, active: wasActive } : f
+                f.name === oldName ? { ...f, name: newName, active: wasActive } : f
             );
             if (wasActive) this.activeFile = newName;
+            await this.saveCurrentProjectToDB();
             showToast(`Renamed to ${newName}`, 'success');
         },
 
@@ -595,32 +608,16 @@ document.addEventListener('alpine:init', () => {
         },
 
         async deleteFile(filename) {
-            if (this.files.length <= 1) {
-                showToast('Cannot delete the last file', 'warning');
-                return;
-            }
-            if (!confirm(`Delete "${filename}"?`)) return;
-            
-            // If deleting the active file, we MUST switch away from it first.
-            if (this.activeFile === filename) {
-                const newActive = this.files.find(f => f.name !== filename).name;
-                await this.switchFile(newActive);
-            }
-            
-            await deleteFileFromDB(filename);
-            
-            // Fix Alpine race condition: safely remove by index to avoid stale filter closures
-            const idx = this.files.findIndex(f => f.name === filename);
-            if (idx > -1) {
-                this.files.splice(idx, 1);
-            }
-            
-            showToast(`Deleted ${filename}`, 'info');
+            this.openProjectAction('delete-file', filename);
         },
 
         async saveCurrentFile() {
             if (!globalThis.myCodeMirror) return;
-            await saveFile(this.activeFile, globalThis.myCodeMirror.getValue(), true);
+            const idx = this.files.findIndex(f => f.name === this.activeFile);
+            if (idx > -1) {
+                this.files[idx].code = globalThis.myCodeMirror.getValue();
+            }
+            await this.saveCurrentProjectToDB();
             globalThis.autosaveTime = Math.floor(Date.now() / 1000);
         },
 
@@ -669,6 +666,128 @@ document.addEventListener('alpine:init', () => {
             localStorage.setItem('newUI', true);
             localStorage.setItem('keybindings', 'default');
             showToast('All settings reset to defaults.', 'info');
+        },
+
+        // ---- Import / Export (.nu) ----
+        savecode() { // export single file (.py)
+            let filename = this.activeFile;
+            if (!filename.endsWith('.py')) filename += '.py';
+            const code = globalThis.myCodeMirror ? globalThis.myCodeMirror.getValue() : '';
+            const blob = new Blob([code], { type: 'text/x-python' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        },
+
+        async exportProject() { // export .nu project
+            await this.saveCurrentProjectToDB();
+            const zip = new JSZip();
+            for (let f of this.files) {
+                zip.file(f.name, f.code);
+            }
+            zip.file('manifest.json', JSON.stringify({ packages: this.installedPackages || [] }, null, 2));
+            
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = `${this.currentProject}.nu`;
+            a.click();
+            showToast(`Exported ${this.currentProject}.nu`, 'success');
+        },
+
+        async loadcode() { // import file or project
+            try {
+                const [handle] = await window.showOpenFilePicker({
+                    types: [{
+                        description: 'Python or Nuilith Project',
+                        accept: {'*/*': ['.py', '.nu']}
+                    }]
+                });
+                const file = await handle.getFile();
+                
+                if (file.name.endsWith('.nu')) {
+                    const zip = await JSZip.loadAsync(file);
+                    const projName = file.name.replace('.nu', '');
+                    
+                    let manifest = { packages: [] };
+                    let importedFiles = [];
+                    
+                    for (let relativePath in zip.files) {
+                        if (relativePath === 'manifest.json') {
+                            const mStr = await zip.file(relativePath).async('string');
+                            manifest = JSON.parse(mStr);
+                        } else if (relativePath.endsWith('.py')) {
+                            const content = await zip.file(relativePath).async('string');
+                            importedFiles.push({ name: relativePath, active: false, code: content });
+                        }
+                    }
+                    
+                    if (importedFiles.length === 0) {
+                        importedFiles = [{ name: 'main.py', active: true, code: '' }];
+                    } else {
+                        importedFiles[0].active = true;
+                    }
+
+                    if (this.projectsList.includes(projName)) {
+                        this.collisionProjectName = projName;
+                        this.renameProjectInput = projName + '_copy';
+                        this.collisionTempData = { files: importedFiles, packages: manifest.packages || [] };
+                        document.getElementById('project_collision_modal').showModal();
+                    } else {
+                        await this.saveImportedProject(projName, importedFiles, manifest.packages || []);
+                    }
+                    
+                } else if (file.name.endsWith('.py')) {
+                    const text = await file.text();
+                    if (!this.files.find(f => f.name === file.name)) {
+                        this.files.push({ name: file.name, active: false, code: text });
+                    } else {
+                        const idx = this.files.findIndex(f => f.name === file.name);
+                        this.files[idx].code = text;
+                    }
+                    this.switchFile(file.name);
+                    this.saveCurrentProjectToDB();
+                    showToast(`Imported ${file.name}`, 'success');
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async resolveCollision(action) {
+            const modal = document.getElementById('project_collision_modal');
+            const data = this.collisionTempData;
+            const targetName = this.collisionProjectName;
+            
+            if (action === 'overwrite') {
+                await this.saveImportedProject(targetName, data.files, data.packages);
+                modal.close();
+            } else if (action === 'rename') {
+                const newName = this.renameProjectInput.trim();
+                if (!newName) return;
+                if (this.projectsList.includes(newName)) {
+                    showToast('Name already taken!', 'error');
+                    return;
+                }
+                await this.saveImportedProject(newName, data.files, data.packages);
+                modal.close();
+            } else {
+                modal.close();
+            }
+            this.collisionTempData = null;
+        },
+
+        async saveImportedProject(name, files, packages) {
+            const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+            tx.objectStore(PROJECTS_STORE).put({
+                projectName: name,
+                files: files,
+                packages: packages
+            });
+            tx.oncomplete = async () => {
+                await this.loadProjectList();
+                this.switchProject(name);
+                showToast(`Project '${name}' imported successfully`, 'success');
+            };
         }
     }));
 });
@@ -777,7 +896,7 @@ window.addEventListener('load', async () => {
         extraKeys: {
             "Tab": (cm) => cm.replaceSelection("    ", "end"),
             "Ctrl-Enter": () => runcode(),
-            "Ctrl-S": (cm) => { saveCurrentFileDirect(); return false; },
+            "Ctrl-S": (cm) => { if (window.ideStateData) window.ideStateData.saveCurrentFile(); return false; },
             "Ctrl-Space": "autocomplete",
             "Esc": (cm) => cm.closeHint?.()
         }
@@ -808,33 +927,11 @@ function stopcode() {
 }
 
 function setupTimers() {
-    setInterval(() => saveCurrentFileDirect(), 30000);
-}
-
-async function saveCurrentFileDirect() {
-    if (!myCodeMirror || !window.ideStateData) return;
-    await saveFile(window.ideStateData.activeFile, myCodeMirror.getValue(), true);
-    globalThis.autosaveTime = Math.floor(Date.now() / 1000);
-}
-
-function savecode() {
-    let filename = window.ideStateData ? window.ideStateData.activeFile : 'main.py';
-    if (!filename.endsWith('.py')) filename += '.py';
-    const blob = new Blob([myCodeMirror.getValue()], { type: 'text/x-python' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-}
-
-async function loadcode() {
-    try {
-        const [handle] = await window.showOpenFilePicker();
-        const file = await handle.getFile();
-        myCodeMirror.setValue(await file.text());
-    } catch (e) {}
+    setInterval(() => {
+        if (window.ideStateData) window.ideStateData.saveCurrentFile();
+    }, 30000);
 }
 
 window.addEventListener('beforeunload', () => {
-    saveCurrentFileDirect();
+    if (window.ideStateData) window.ideStateData.saveCurrentFile();
 });
