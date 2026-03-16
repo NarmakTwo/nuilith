@@ -141,13 +141,19 @@
                                     </template>
                                     <!-- Normal Tab -->
                                     <template x-if="renamingFile !== f.name">
-                                        <button @click="switchFile(f.name)" 
-                                                @dblclick="startRename(f.name)"
-                                                :class="activeFile === f.name ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
-                                                class="btn btn-xs rounded-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap">
-                                            <span x-text="f.name"></span>
-                                            <span x-show="files.length > 1" @click.stop="deleteFile(f.name)" class="ml-1 opacity-50 hover:opacity-100 cursor-pointer">&times;</span>
-                                        </button>
+                                        <div class="join">
+                                            <button @click="switchFile(f.name)" 
+                                                    @dblclick="startRename(f.name)"
+                                                    :class="activeFile === f.name ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+                                                    class="btn btn-xs join-item rounded-l-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap border-none pr-1">
+                                                <span x-text="f.name"></span>
+                                            </button>
+                                            <button x-show="files.length > 1" 
+                                                    @click="deleteFile(f.name)" 
+                                                    :class="activeFile === f.name ? 'bg-blue-600 text-white hover:bg-red-500' : 'bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white'"
+                                                    class="btn btn-xs join-item rounded-r-lg border-none px-1 h-6 min-h-6 opacity-70 hover:opacity-100"
+                                                    title="Delete file">&times;</button>
+                                        </div>
                                     </template>
                                 </div>
                             </template>

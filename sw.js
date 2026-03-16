@@ -3,7 +3,7 @@
  * Handlers: Offline Cache + Synchronous Input Bridge
  */
 
-const CACHE_NAME = 'nuilith-cache-v5';
+const CACHE_NAME = 'nuilith-cache-v6';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [

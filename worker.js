@@ -84,24 +84,45 @@ check(code_str, "main.py", r)
     // --- MICROPIP INSTALL HANDLER ---
     if (type === "INSTALL") {
         const pkg = event.data.package;
+        const isSilent = event.data.isSilent || false;
         if (!pyodide) {
-            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: "Python runtime not ready yet." });
+            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: "Python runtime not ready yet.", isSilent });
             return;
         }
         try {
+            // Handle both string and array
+            const packagesToInstall = Array.isArray(pkg) ? pkg : [pkg];
+            // Skip if empty array
+            if (packagesToInstall.length === 0) return;
+
+            self.__packages_to_install__ = packagesToInstall;
             await pyodide.runPythonAsync(`
 import micropip
-await micropip.install("${pkg.replace(/"/g, '\\"')}")
+from js import __packages_to_install__
+pkgs = __packages_to_install__.to_py()
+await micropip.install(pkgs)
             `);
             // Get updated list of installed packages
             const listResult = await pyodide.runPythonAsync(`
 import micropip, json
-json.dumps(sorted([str(p) for p in micropip.list()]))
+# Filter out internal/helper packages if desired, or just return all
+all_pkgs = sorted([str(p) for p in micropip.list()])
+json.dumps(all_pkgs)
             `);
             const packages = JSON.parse(listResult.toString());
-            self.postMessage({ type: "INSTALL_SUCCESS", package: pkg, installedPackages: packages });
+            self.postMessage({ 
+                type: "INSTALL_SUCCESS", 
+                package: Array.isArray(pkg) ? pkg.join(', ') : pkg, 
+                installedPackages: packages,
+                isSilent
+            });
         } catch (err) {
-            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: String(err.message) });
+            self.postMessage({ 
+                type: "INSTALL_ERROR", 
+                package: Array.isArray(pkg) ? pkg.join(', ') : pkg, 
+                error: String(err.message),
+                isSilent
+            });
         }
         return;
     }

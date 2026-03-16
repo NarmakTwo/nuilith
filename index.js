@@ -208,10 +208,18 @@ async function deleteFileFromDB(filename) {
     try {
         const db = await openFilesDB();
         const tx = db.transaction(FILES_STORE, 'readwrite');
-        tx.objectStore(FILES_STORE).delete(filename);
+        const store = tx.objectStore(FILES_STORE);
+        
+        // Use a request to check if it exists or just try deleting
+        // delete() in IDB doesn't throw if key missing, but we'll be careful
+        store.delete(filename);
+        
         await new Promise((resolve, reject) => {
             tx.oncomplete = resolve;
-            tx.onerror = reject;
+            tx.onerror = (e) => {
+                console.warn('Delete transaction failed:', e.target.error);
+                resolve(); // Don't crash the UI if delete fails
+            };
         });
         db.close();
     } catch (err) {
@@ -249,6 +257,16 @@ function initWorker() {
     pythonWorker = new Worker('worker.js');
     pythonWorker.onmessage = (event) => {
         const { type, text, annotations } = event.data;
+        if (type === "READY") {
+            // Re-install packages if any were saved
+            const saved = localStorage.getItem('installedPackages');
+            if (saved) {
+                const packages = JSON.parse(saved);
+                if (packages.length > 0) {
+                    pythonWorker.postMessage({ type: "INSTALL", package: packages, isSilent: true });
+                }
+            }
+        }
         if (type === "LINT_RESULT" && pendingLintCallback) {
             pendingLintCallback(event.data.id ?? 0, annotations);
             pendingLintCallback = null;
@@ -268,16 +286,23 @@ function initWorker() {
             if (window.ideStateData) {
                 window.ideStateData.installedPackages = event.data.installedPackages || [];
                 window.ideStateData.installingPackage = false;
+                // Persist to localStorage
+                localStorage.setItem('installedPackages', JSON.stringify(window.ideStateData.installedPackages));
             }
-            showToast(`Package "${event.data.package}" installed successfully!`, 'success');
+            if (!event.data.isSilent) {
+                showToast(`Package "${event.data.package}" installed successfully!`, 'success');
+            }
         }
         if (type === "INSTALL_ERROR") {
             if (window.ideStateData) window.ideStateData.installingPackage = false;
-            showToast(`Failed to install "${event.data.package}": ${event.data.error}`, 'error');
+            if (!event.data.isSilent) {
+                showToast(`Failed to install "${event.data.package}": ${event.data.error}`, 'error');
+            }
         }
         if (type === "PACKAGE_LIST") {
             if (window.ideStateData) {
                 window.ideStateData.installedPackages = event.data.installedPackages || [];
+                localStorage.setItem('installedPackages', JSON.stringify(window.ideStateData.installedPackages));
             }
         }
     };
@@ -338,6 +363,16 @@ document.addEventListener('alpine:init', () => {
             this.applyTheme();
             this.updateFontSize();
             this.updateLineNumbers();
+
+            // Load installed packages from localStorage
+            const savedPackages = localStorage.getItem('installedPackages');
+            if (savedPackages) {
+                try {
+                    this.installedPackages = JSON.parse(savedPackages);
+                } catch (e) {
+                    console.error('Failed to parse saved packages', e);
+                }
+            }
 
             // Load files from IDB
             await migrateOldData();
@@ -544,12 +579,21 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             if (!confirm(`Delete "${filename}"?`)) return;
-            await deleteFileFromDB(filename);
-            this.files = this.files.filter(f => f.name !== filename);
+            
+            // If deleting the active file, we MUST switch away from it first.
             if (this.activeFile === filename) {
-                const newActive = this.files[0].name;
+                const newActive = this.files.find(f => f.name !== filename).name;
                 await this.switchFile(newActive);
             }
+            
+            await deleteFileFromDB(filename);
+            
+            // Fix Alpine race condition: safely remove by index to avoid stale filter closures
+            const idx = this.files.findIndex(f => f.name === filename);
+            if (idx > -1) {
+                this.files.splice(idx, 1);
+            }
+            
             showToast(`Deleted ${filename}`, 'info');
         },
 
@@ -752,7 +796,8 @@ async function saveCurrentFileDirect() {
 }
 
 function savecode() {
-    const filename = window.ideStateData ? window.ideStateData.activeFile : 'main.py';
+    let filename = window.ideStateData ? window.ideStateData.activeFile : 'main.py';
+    if (!filename.endsWith('.py')) filename += '.py';
     const blob = new Blob([myCodeMirror.getValue()], { type: 'text/x-python' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
