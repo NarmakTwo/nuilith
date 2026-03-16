@@ -349,13 +349,22 @@ document.addEventListener('alpine:init', () => {
         renameValue: '',
 
         themes: [
-            { id: 'dark', name: 'Dark (Default)', preview: '#1c2130' },
-            { id: 'light', name: 'Light', preview: '#f8fafc' },
-            { id: 'nord-dark', name: 'Nord Dark', preview: '#2e3440' },
-            { id: 'nord-light', name: 'Nord Light', preview: '#e5e9f0' },
-            { id: 'dark-red', name: 'Dark Red', preview: '#2d1a1a' },
-            { id: 'light-red', name: 'Light Red', preview: '#fff5f5' },
-            { id: 'amoled', name: 'AMOLED', preview: '#000000' }
+            { id: 'dark', name: 'Dark (Default)', bg: '#1c2130', fg: '#ffffff', keyword: '#c678dd', func: '#61afef', string: '#98c379' },
+            { id: 'light', name: 'Light', bg: '#f8fafc', fg: '#1e293b', keyword: '#d73a49', func: '#6f42c1', string: '#032f62' },
+            { id: 'nord-dark', name: 'Nord Dark', bg: '#2e3440', fg: '#eceff4', keyword: '#81a1c1', func: '#88c0d0', string: '#a3be8c' },
+            { id: 'nord-light', name: 'Nord Light', bg: '#e5e9f0', fg: '#2e3440', keyword: '#5e81ac', func: '#81a1c1', string: '#a3be8c' },
+            { id: 'dark-red', name: 'Dark Red', bg: '#1a0f0f', fg: '#ff9999', keyword: '#ef4444', func: '#fca5a5', string: '#f87171' },
+            { id: 'dracula', name: 'Dracula', bg: '#282a36', fg: '#f8f8f2', keyword: '#ff79c6', func: '#50fa7b', string: '#f1fa8c' },
+            { id: 'material', name: 'Material', bg: '#263238', fg: '#eeffff', keyword: '#c792ea', func: '#82aaff', string: '#c3e88d' },
+            { id: 'monokai', name: 'Monokai', bg: '#272822', fg: '#f8f8f2', keyword: '#f92672', func: '#a6e22e', string: '#e6db74' },
+            { id: 'solarized-dark', name: 'Solarized Dark', bg: '#002b36', fg: '#839496', keyword: '#859900', func: '#268bd2', string: '#2aa198' },
+            { id: 'solarized-light', name: 'Solarized Light', bg: '#fdf6e3', fg: '#657b83', keyword: '#859900', func: '#268bd2', string: '#2aa198' },
+            { id: 'idea', name: 'IDEA', bg: '#ffffff', fg: '#000000', keyword: '#000080', func: '#000000', string: '#008000' },
+            { id: 'vscode-dark', name: 'VSCode Dark', bg: '#1e1e1e', fg: '#d4d4d4', keyword: '#569cd6', func: '#dcdcaa', string: '#ce9178' },
+            { id: 'github-dark', name: 'GitHub Dark', bg: '#0d1117', fg: '#c9d1d9', keyword: '#ff7b72', func: '#d2a8ff', string: '#a5d6ff' },
+            { id: 'github-light', name: 'GitHub Light', bg: '#ffffff', fg: '#24292f', keyword: '#cf222e', func: '#8250df', string: '#0a3069' },
+            { id: 'replit-dark', name: 'Replit Dark', bg: '#0e1525', fg: '#f5f9fc', keyword: '#ff5c5c', func: '#5c94ff', string: '#38b584' },
+            { id: 'hc-black', name: 'High Contrast', bg: '#000000', fg: '#ffffff', keyword: '#ffff00', func: '#00ff00', string: '#ff0000' }
         ],
 
         async init() {
@@ -452,7 +461,18 @@ document.addEventListener('alpine:init', () => {
                 'nord-light': { bg: '#e5e9f0', fg: '#2e3440', menu: '#d8dee9', accent: '#81a1c1', cm: 'default' },
                 'dark-red': { bg: '#1a0f0f', fg: '#ff9999', menu: '#2d1a1a', accent: '#ef4444', cm: 'rubyblue' },
                 'light-red': { bg: '#fff5f5', fg: '#991b1b', menu: '#fee2e2', accent: '#ef4444', cm: 'default' },
-                'amoled': { bg: '#000000', fg: '#ffffff', menu: '#111111', accent: '#3b82f6', cm: 'vibrant-ink' }
+                'amoled': { bg: '#000000', fg: '#ffffff', menu: '#111111', accent: '#3b82f6', cm: 'vibrant-ink' },
+                'dracula': { bg: '#282a36', fg: '#f8f8f2', menu: '#21222c', accent: '#ff79c6', cm: 'dracula' },
+                'material': { bg: '#263238', fg: '#eeffff', menu: '#1e272c', accent: '#80cbc4', cm: 'material' },
+                'monokai': { bg: '#272822', fg: '#f8f8f2', menu: '#1e1f1c', accent: '#a6e22e', cm: 'monokai' },
+                'solarized-dark': { bg: '#002b36', fg: '#839496', menu: '#001e26', accent: '#268bd2', cm: 'solarized dark' },
+                'solarized-light': { bg: '#fdf6e3', fg: '#657b83', menu: '#eee8d5', accent: '#268bd2', cm: 'solarized light' },
+                'idea': { bg: '#ffffff', fg: '#000000', menu: '#f5f5f5', accent: '#0000ff', cm: 'idea' },
+                'vscode-dark': { bg: '#1e1e1e', fg: '#d4d4d4', menu: '#252526', accent: '#007acc', cm: 'moxer' },
+                'github-dark': { bg: '#0d1117', fg: '#c9d1d9', menu: '#161b22', accent: '#58a6ff', cm: 'material-darker' },
+                'github-light': { bg: '#ffffff', fg: '#24292f', menu: '#f6f8fa', accent: '#0969da', cm: 'eclipse' },
+                'replit-dark': { bg: '#0e1525', fg: '#f5f9fc', menu: '#1c2333', accent: '#0084ff', cm: 'oceanic-next' },
+                'hc-black': { bg: '#000000', fg: '#ffffff', menu: '#000000', accent: '#00ff00', cm: 'blackboard' }
             };
             const t = themes[this.theme] || themes.dark;
             document.documentElement.style.setProperty('--bg', t.bg);

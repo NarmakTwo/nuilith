@@ -3,7 +3,7 @@
  * Handlers: Offline Cache + Synchronous Input Bridge
  */
 
-const CACHE_NAME = 'nuilith-cache-v6';
+const CACHE_NAME = 'nuilith-cache-v8';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [
@@ -33,6 +33,16 @@ const CDN_ASSETS = [
     'https://unpkg.com/codemirror@5.65.21/theme/nord.css',
     'https://unpkg.com/codemirror@5.65.21/theme/rubyblue.css',
     'https://unpkg.com/codemirror@5.65.21/theme/vibrant-ink.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/dracula.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/material.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/monokai.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/solarized.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/idea.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/moxer.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/material-darker.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/eclipse.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/oceanic-next.css',
+    'https://unpkg.com/codemirror@5.65.21/theme/blackboard.css',
 
     // CodeMirror addons
     'https://unpkg.com/codemirror@5.65.21/addon/comment/comment.js',

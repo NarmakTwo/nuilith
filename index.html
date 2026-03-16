@@ -25,6 +25,16 @@
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/nord.css">
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/rubyblue.css">
         <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/vibrant-ink.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/dracula.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/monokai.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/solarized.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/idea.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/moxer.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material-darker.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/eclipse.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/oceanic-next.css">
+        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/blackboard.css">
         <link rel="stylesheet" type="text/css" href="/programiz.css">
         <script src="https://unpkg.com/alpinejs" defer></script>
 
@@ -270,9 +280,16 @@
                             <template x-for="t in themes" :key="t.id">
                                 <div @click="setTheme(t.id)" 
                                      :class="theme === t.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-800 hover:border-gray-500'"
-                                     class="cursor-pointer border-2 rounded-xl p-3 transition-all">
-                                    <div :style="`background: ${t.preview}`" class="h-12 w-full rounded-md mb-2 shadow-inner"></div>
-                                    <span class="text-sm font-medium text-white block text-center" x-text="t.name"></span>
+                                     class="cursor-pointer border-2 rounded-xl p-3 transition-all flex flex-col items-center">
+                                    
+                                    <!-- Code Preview Panel -->
+                                    <div :style="`background: ${t.bg}; color: ${t.fg}`" 
+                                         class="h-24 w-full rounded-md mb-2 shadow-inner overflow-hidden text-left p-3 text-[10px] sm:text-xs font-mono select-none flex flex-col justify-center">
+                                        <div><span :style="`color: ${t.keyword}`">def</span> <span :style="`color: ${t.func}`">hello_world</span>():</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span :style="`color: ${t.keyword}`">print</span>(<span :style="`color: ${t.string}`">"Hello"</span>)</div>
+                                    </div>
+
+                                    <span class="text-sm font-medium text-white block text-center mt-1" x-text="t.name"></span>
                                 </div>
                             </template>
                         </div>
