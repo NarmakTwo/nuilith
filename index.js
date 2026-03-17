@@ -143,7 +143,7 @@ document.addEventListener('alpine:init', () => {
         lineWrapping: localStorage.getItem('lineWrapping') === 'true',
         codeFolding: localStorage.getItem('codeFolding') !== 'false',
         bracketMastery: localStorage.getItem('bracketMastery') !== 'false',
-        activeLineMode: localStorage.getItem('activeLineMode') || 'non-latest',
+        activeLineHighlight: localStorage.getItem('activeLineHighlight') !== 'false',
         inRepl: false,
 
         // Project system (.nu)
@@ -440,6 +440,7 @@ document.addEventListener('alpine:init', () => {
                 localStorage.setItem('_prevFeatureTabs', this.featureTabs);
                 localStorage.setItem('_prevFeaturePackages', this.featurePackages);
                 localStorage.setItem('_prevFeatureToasts', this.featureToasts);
+
                 this.featureTabs = false;
                 this.featurePackages = false;
                 this.featureToasts = false;
@@ -489,24 +490,13 @@ document.addEventListener('alpine:init', () => {
             }
         },
         toggleActiveLine() {
-            localStorage.setItem('activeLineMode', this.activeLineMode);
+            localStorage.setItem('activeLineHighlight', this.activeLineHighlight);
             this.applyActiveLineHighlight();
         },
         applyActiveLineHighlight() {
             if (!globalThis.myCodeMirror) return;
-            if (this.activeLineMode === 'off') {
-                globalThis.myCodeMirror.setOption('styleActiveLine', false);
-            } else {
-                globalThis.myCodeMirror.setOption('styleActiveLine', true);
-            }
-            if (this.activeLineMode !== 'non-latest') {
-                globalThis.myCodeMirror.getWrapperElement().classList.remove('hide-active-line');
-            } else {
-                const cm = globalThis.myCodeMirror;
-                if (cm.getCursor().line === cm.lastLine()) {
-                    cm.getWrapperElement().classList.add('hide-active-line');
-                }
-            }
+            globalThis.myCodeMirror.setOption('styleActiveLine', this.activeLineHighlight);
+            globalThis.myCodeMirror.getWrapperElement().classList.remove('hide-active-line');
         },
         startRepl() {
             this.inRepl = !this.inRepl;
@@ -962,11 +952,27 @@ window.addEventListener('load', async () => {
         foldGutter: window.ideStateData ? window.ideStateData.codeFolding : true,
         matchBrackets: window.ideStateData ? window.ideStateData.bracketMastery : true,
         autoCloseBrackets: window.ideStateData ? window.ideStateData.bracketMastery : true,
-        styleActiveLine: window.ideStateData ? (window.ideStateData.activeLineMode !== 'off') : true,
+        styleActiveLine: window.ideStateData ? window.ideStateData.activeLineHighlight : true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
         lint: { getAnnotations: CodeMirror.lint.python || (() => []), async: true, delay: 600 },
         indentUnit: 4,
         extraKeys: {
+            "Backspace": (cm) => {
+                if (cm.somethingSelected()) return CodeMirror.Pass;
+                const cursor = cm.getCursor();
+                const lineContent = cm.getLine(cursor.line);
+                
+                if (cursor.ch > 0) {
+                    const textBeforeCursor = lineContent.substring(0, cursor.ch);
+                    if (/^\s+$/.test(textBeforeCursor)) {
+                        const indentUnit = cm.getOption("indentUnit") || 4;
+                        const spacesToRemove = cursor.ch % indentUnit === 0 ? indentUnit : (cursor.ch % indentUnit);
+                        cm.replaceRange("", {line: cursor.line, ch: cursor.ch - spacesToRemove}, cursor);
+                        return;
+                    }
+                }
+                return CodeMirror.Pass;
+            },
             "Tab": (cm) => cm.replaceSelection("    ", "end"),
             "Ctrl-Enter": () => runcode(),
             "Ctrl-S": (cm) => { if (window.ideStateData) window.ideStateData.saveCurrentFile(); return false; },
@@ -979,18 +985,6 @@ window.addEventListener('load', async () => {
     globalThis.myCodeMirror.on("inputRead", function(cm, change) {
         if (change.text[0] === ".") {
             CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
-        }
-    });
-
-    // Handle Active Line Highlighting Non-Latest mode
-    globalThis.myCodeMirror.on('cursorActivity', (cm) => {
-        if (window.ideStateData && window.ideStateData.activeLineMode === 'non-latest') {
-            const cursor = cm.getCursor();
-            if (cursor.line === cm.lastLine()) {
-                cm.getWrapperElement().classList.add('hide-active-line');
-            } else {
-                cm.getWrapperElement().classList.remove('hide-active-line');
-            }
         }
     });
 

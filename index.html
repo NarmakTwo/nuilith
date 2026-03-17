@@ -412,11 +412,7 @@
                             <!-- Active Line Highlighting -->
                             <div>
                                 <label class="text-sm text-gray-400 mb-2 block">Active Line Highlight</label>
-                                <select class="select select-bordered select-sm bg-gray-800 text-white w-full" x-model="activeLineMode" @change="toggleActiveLine()">
-                                    <option value="off">Off</option>
-                                    <option value="on">On (Always)</option>
-                                    <option value="non-latest">Non-Latest Line Only</option>
-                                </select>
+                                <input type="checkbox" class="toggle toggle-primary" x-model="activeLineHighlight" @change="toggleActiveLine()" />
                             </div>
                         </div>
                     </section>
