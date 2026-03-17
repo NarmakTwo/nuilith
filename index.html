@@ -82,7 +82,7 @@
         <div id="toast-container" class="toast toast-end toast-top z-[100]" style="top: 1rem; right: 1rem;"></div>
 
         <!-- Header -->
-        <div class="flex items-center gap-4 m-2" id="info">
+        <div class="flex items-center gap-4 m-2" id="info" x-show="!zenMode">
             <h1 class="text-2xl text-center bg-gray-800 border border-gray-700 pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
                 <img src="/assets/icon.png" class="w-10 h-10 inline-block mr-2" />
                 <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
@@ -148,7 +148,9 @@
         </div>
 
         <!-- Main IDE Layout -->
-        <div class="flex w-full overflow-hidden" style="height: calc(100vh - 120px); margin-top: 10px;" id="doublepanel">
+        <div class="flex w-full overflow-hidden" 
+             :style="zenMode ? 'height: 100vh; margin-top: 0;' : 'height: calc(100vh - 120px); margin-top: 10px;'" 
+             id="doublepanel">
             
             <style>
                 /* Essential CSS to pin CodeMirror and Terminal */
