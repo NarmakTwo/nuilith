@@ -1,5 +1,7 @@
 <div align="center">
-  <img src="https://nuilith.onrender.com/assets/icon.png" alt="Python Logo" width="80" />
+  <a href="https://nuilith.onrender.com/" target="_blank">
+    <img src="https://nuilith.onrender.com/assets/icon.png" alt="Python Logo" width="80" />
+  </a>
   
   <h1>Nuilith Python IDE</h1>
   
@@ -17,13 +19,13 @@
   </p>
 
   <p>
-    <a href="https://vercel.com/new/clone?repository-url=https://github.com/NarmakTwo/python-ide">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/NarmakTwo/python-ide" target="_blank">
       <img src="https://vercel.com/button" alt="Deploy with Vercel" />
     </a>
-    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/NarmakTwo/python-ide">
+    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/NarmakTwo/python-ide" target="_blank">
       <img src="https://www.netlify.com/img/deploy/button.svg" alt="Deploy to Netlify" />
     </a>
-    <a href="https://render.com/deploy?repo=https://github.com/NarmakTwo/python-ide">
+    <a href="https://render.com/deploy?repo=https://github.com/NarmakTwo/python-ide" target="_blank">
       <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
     </a>
   </p>
