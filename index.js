@@ -140,6 +140,7 @@ document.addEventListener('alpine:init', () => {
         packageName: '',
         installedPackages: [],
         installingPackage: false,
+        isLoaded: false,
 
         // Feature toggles
         newUI: localStorage.getItem('newUI') !== 'false',
@@ -275,7 +276,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async saveCurrentProjectToDB() {
-            if (!openFilesDB) return;
+            if (!openFilesDB || !this.isLoaded) return;
             if (globalThis.myCodeMirror) {
                 const idx = this.files.findIndex(f => f.name === this.activeFile);
                 if (idx > -1) this.files[idx].code = globalThis.myCodeMirror.getValue();
@@ -318,6 +319,11 @@ document.addEventListener('alpine:init', () => {
                         this.files = [{ name: 'main.py', active: true, code: 'print("Hello World")' }];
                         this.installedPackages = [];
                     }
+                    this.isLoaded = true;
+                    resolve();
+                };
+                req.onerror = () => {
+                    this.isLoaded = true;
                     resolve();
                 };
             });
@@ -668,7 +674,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async saveCurrentFile() {
-            if (!globalThis.myCodeMirror) return;
+            if (!globalThis.myCodeMirror || !this.isLoaded) return;
             const idx = this.files.findIndex(f => f.name === this.activeFile);
             if (idx > -1) {
                 this.files[idx].code = globalThis.myCodeMirror.getValue();
@@ -957,7 +963,9 @@ window.addEventListener('load', async () => {
     // 5. CodeMirror Setup
     const editorpage = document.getElementById("editor");
     globalThis.myCodeMirror = CodeMirror(editorpage, {
-        value: "print('Hello World')",
+        value: (window.ideStateData && window.ideStateData.files.length > 0)
+            ? (window.ideStateData.files.find(f => f.name === window.ideStateData.activeFile) || window.ideStateData.files[0]).code || ''
+            : "print('Hello World')",
         mode: "python",
         theme: "programiz",
         lineNumbers: true,

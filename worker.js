@@ -164,18 +164,28 @@ json.dumps(sorted([str(p) for p in micropip.list()]))
         });
 
         try {
+            // Spoof isatty AFTER setStdout so the patch applies to the current stdout
             await pyodide.runPythonAsync(`
-import builtins, os, sys
+import builtins, os, sys, importlib
 from js import postToUI
 
-def mocked_system(command):
-    if command in ['cls', 'clear']:
+# Restore __import__ in case a previous run installed a bad hook
+builtins.__import__ = importlib.__import__
+
+def _mocked_system(cmd):
+    if cmd in ('cls', 'clear'):
         postToUI("CLEAR", "")
         return 0
     return -1
-
-os.system = mocked_system
+os.system = _mocked_system
 builtins.clear = lambda: postToUI("CLEAR", "")
+sys.stdout.isatty = lambda: True
+sys.stderr.isatty = lambda: True
+
+# Patch colorama if already imported
+if 'colorama' in sys.modules:
+    import colorama
+    colorama.init(strip=False, convert=False)
             `);
             const result = await pyodide.runPythonAsync(code);
             if (result !== undefined) {
@@ -192,11 +202,13 @@ builtins.clear = lambda: postToUI("CLEAR", "")
     if (type === "RUN") {
         if (!pyodide) return;
 
-        // Setup the Sync Input Bridge
-        // We use the 'postToUI' JS function defined above to avoid DataCloneError
+        // Setup the Sync Input Bridge FIRST
         await pyodide.runPythonAsync(`
-import builtins
+import builtins, importlib
 from js import XMLHttpRequest, postToUI
+
+# Restore __import__ in case a previous run installed a bad hook
+builtins.__import__ = importlib.__import__
 
 def sync_input(prompt=""):
     if prompt:
@@ -210,14 +222,13 @@ def sync_input(prompt=""):
     except Exception as e:
         return ""
 
-def mocked_system(command):
-    if command in ['cls', 'clear']:
+import os
+def _mocked_system(cmd):
+    if cmd in ('cls', 'clear'):
         postToUI("CLEAR", "")
         return 0
     return -1
-
-import os
-os.system = mocked_system
+os.system = _mocked_system
 builtins.input = sync_input
 builtins.clear = lambda: postToUI("CLEAR", "")
         `);
@@ -248,6 +259,18 @@ builtins.clear = lambda: postToUI("CLEAR", "")
                 return buffer.length;
             }
         });
+
+        // Spoof isatty AFTER setStdout so the patch applies to the CURRENT stdout
+        await pyodide.runPythonAsync(`
+import sys
+sys.stdout.isatty = lambda: True
+sys.stderr.isatty = lambda: True
+
+# Patch colorama if already imported (no dangerous import hook needed)
+if 'colorama' in sys.modules:
+    import colorama
+    colorama.init(strip=False, convert=False)
+        `);
 
         try {
             await pyodide.runPythonAsync(code);
