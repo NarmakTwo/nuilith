@@ -95,9 +95,42 @@ npx serve .
 
 Access the development environment in a modern browser (Chrome or Firefox) via `http://localhost:3000`. 
 
+## Roadmap
+
+Nuilith is evolving! We have ambitious plans for the future and are looking for contributors to help bring these features to life:
+
+- [ ] **Jupyter Notebook Functionality**: Integrate a notebook-style interface option for interactive data science.
+- [ ] **Matplotlib Integration**: Enable full data visualization directly in the browser terminal.
+- [ ] **Modular & User-Editable UI**: Refactor the architecture to allow users to customize their workspace layout.
+- [ ] **Multi-Language Runtimes**: Expand beyond Python to support Node.js, C/C++, Ruby, Go, and Lua.
+- [ ] **Backend & Cloud Persistence**: Implement a reliable backend for project hosting and collaboration.
+- [ ] **Enhanced Sidebar**: Add a sidebar for file selection, possible extensions, and a more integrated developer experience.
+
+## Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on setup and guidelines.
+
 ## Keyboard Shortcuts
 
 - `Ctrl`+`Enter` — Execute script (implicitly saves current buffer to IndexedDB)
 - `Ctrl`+`S` — Save raw buffer to IndexedDB manually
 - `Ctrl`+`Space` — Trigger CodeMirror autocomplete
 - `.` (typing a period after an object reference) — Auto-suggests class/instance methods
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for the Python Community</p>
+</div>
