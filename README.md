@@ -33,6 +33,10 @@
 
 ---
 
+![Screenshot of Nuilith](/assets/nuilith.png)
+
+---
+
 Nuilith is a static, browser-based Python development environment. It leverages [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly) to execute Python code entirely on the client side without a backend. Once the initial assets (Pyodide and Pyflakes) are fetched and cached by a Service Worker, the IDE is fully functional offline.
 
 ## Core Architecture
