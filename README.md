@@ -4,7 +4,7 @@
   <h1>Nuilith Python IDE</h1>
   
   <p>
-    <strong>A frontend-only, offline-capable Python IDE running entirely in the browser.</strong>
+    <strong>A static, offline-capable Python IDE running entirely in the browser.</strong>
   </p>
 
   <p>
