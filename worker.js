@@ -110,16 +110,16 @@ all_pkgs = sorted([str(p) for p in micropip.list()])
 json.dumps(all_pkgs)
             `);
             const packages = JSON.parse(listResult.toString());
-            self.postMessage({ 
-                type: "INSTALL_SUCCESS", 
-                package: Array.isArray(pkg) ? pkg.join(', ') : pkg, 
+            self.postMessage({
+                type: "INSTALL_SUCCESS",
+                package: Array.isArray(pkg) ? pkg.join(', ') : pkg,
                 installedPackages: packages,
                 isSilent
             });
         } catch (err) {
-            self.postMessage({ 
-                type: "INSTALL_ERROR", 
-                package: Array.isArray(pkg) ? pkg.join(', ') : pkg, 
+            self.postMessage({
+                type: "INSTALL_ERROR",
+                package: Array.isArray(pkg) ? pkg.join(', ') : pkg,
                 error: String(err.message),
                 isSilent
             });
@@ -148,22 +148,35 @@ json.dumps(sorted([str(p) for p in micropip.list()]))
 
     if (type === "EVAL_REPL") {
         if (!pyodide) return;
-        
+
         const decoder = new TextDecoder("utf-8");
         pyodide.setStdout({
             write: (buffer) => {
-                try { postToUI("PRINT", decoder.decode(buffer)); } catch(e) {}
+                try { postToUI("PRINT", decoder.decode(buffer)); } catch (e) { }
                 return buffer.length;
             }
         });
         pyodide.setStderr({
             write: (buffer) => {
-                try { postToUI("ERROR", decoder.decode(buffer)); } catch(e) {}
+                try { postToUI("ERROR", decoder.decode(buffer)); } catch (e) { }
                 return buffer.length;
             }
         });
 
         try {
+            await pyodide.runPythonAsync(`
+import builtins, os, sys
+from js import postToUI
+
+def mocked_system(command):
+    if command in ['cls', 'clear']:
+        postToUI("CLEAR", "")
+        return 0
+    return -1
+
+os.system = mocked_system
+builtins.clear = lambda: postToUI("CLEAR", "")
+            `);
             const result = await pyodide.runPythonAsync(code);
             if (result !== undefined) {
                 postToUI("PRINT", String(result) + "\\n");
@@ -197,7 +210,16 @@ def sync_input(prompt=""):
     except Exception as e:
         return ""
 
+def mocked_system(command):
+    if command in ['cls', 'clear']:
+        postToUI("CLEAR", "")
+        return 0
+    return -1
+
+import os
+os.system = mocked_system
 builtins.input = sync_input
+builtins.clear = lambda: postToUI("CLEAR", "")
         `);
 
         // Redirect stdout/stderr using streaming writes with proper byte handling

@@ -26,10 +26,10 @@ function showToast(message, type = 'info') {
     if (!container) { alert(message); return; }
 
     const alertClasses = {
-        info:    'alert-info',
+        info: 'alert-info',
         success: 'alert-success',
         warning: 'alert-warning',
-        error:   'alert-error'
+        error: 'alert-error'
     };
 
     const toast = document.createElement('div');
@@ -69,12 +69,25 @@ function initWorker() {
             pendingLintCallback(event.data.id ?? 0, annotations);
             pendingLintCallback = null;
         }
-        if (type === "PRINT") term.echo(text, { newline: false });
-        if (type === "ERROR") {
-            term.error(text, { newline: false });
-            term.set_prompt(globalThis.nuilithPrompt);
-            if (window.ideStateData) window.ideStateData.running = false;
+        if (type === "PRINT" || type === "ERROR") {
+            if (text.includes('\x1b[2J') || text.includes('\u001b[2J')) {
+                term.clear();
+                // Strip the clear sequence and echo the rest
+                const cleaned = text.replace(/\x1b\[2J|\u001b\[2J/g, '');
+                if (cleaned) {
+                    if (type === "PRINT") term.echo(cleaned, { newline: false });
+                    else term.error(cleaned, { newline: false });
+                }
+            } else {
+                if (type === "PRINT") term.echo(text, { newline: false });
+                else term.error(text, { newline: false });
+            }
+            if (type === "ERROR") {
+                term.set_prompt(globalThis.nuilithPrompt);
+                if (window.ideStateData) window.ideStateData.running = false;
+            }
         }
+        if (type === "CLEAR") term.clear();
         if (type === "FINISHED") {
             term.set_prompt(globalThis.nuilithPrompt);
             if (window.ideStateData) window.ideStateData.running = false;
@@ -107,7 +120,7 @@ function initWorker() {
 }
 
 // Python lint: pyflakes via worker (async)
-const pythonLint = function(text, callback) {
+const pythonLint = function (text, callback) {
     if (!pythonWorker) return;
     const id = ++lintRequestId;
     pendingLintCallback = (resultId, annotations) => {
@@ -212,11 +225,11 @@ document.addEventListener('alpine:init', () => {
                 };
                 request.onsuccess = async (event) => {
                     openFilesDB = event.target.result;
-                    
+
                     // Migration check:
                     const pTx = openFilesDB.transaction([PROJECTS_STORE], 'readonly');
                     const defReq = pTx.objectStore(PROJECTS_STORE).get('default');
-                    
+
                     defReq.onsuccess = async () => {
                         if (!defReq.result) {
                             console.log("Migrating legacy flat files to 'default' project...");
@@ -227,12 +240,12 @@ document.addEventListener('alpine:init', () => {
                                 if (filesToMigrate.length === 0) {
                                     filesToMigrate = [{ filename: 'main.py', active: true, code: 'print("Hello World")' }];
                                 }
-                                
+
                                 // Mapping old {filename, code, active} -> new {name, code, active} 
                                 // to match our updated memory structure
                                 const mappedFiles = filesToMigrate.map(f => ({ name: f.filename, active: f.active, code: f.code }));
                                 const packagesToMigrate = JSON.parse(localStorage.getItem('installedPackages') || '[]');
-                                
+
                                 const wTx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
                                 wTx.objectStore(PROJECTS_STORE).put({
                                     projectName: 'default',
@@ -281,10 +294,10 @@ document.addEventListener('alpine:init', () => {
         async switchProject(projName, isFirstLoad = false) {
             if (!isFirstLoad && this.currentProject === projName) return;
             if (!isFirstLoad) await this.saveCurrentProjectToDB();
-            
+
             this.currentProject = projName;
             localStorage.setItem('currentProject', projName);
-            
+
             await new Promise(resolve => {
                 const tx = openFilesDB.transaction([PROJECTS_STORE], 'readonly');
                 const req = tx.objectStore(PROJECTS_STORE).get(this.currentProject);
@@ -293,7 +306,7 @@ document.addEventListener('alpine:init', () => {
                         this.files = req.result.files;
                         this.installedPackages = req.result.packages || [];
                         localStorage.setItem('installedPackages', JSON.stringify(this.installedPackages));
-                        
+
                         const activeF = this.files.find(f => f.active);
                         this.activeFile = activeF ? activeF.name : this.files[0].name;
                         if (globalThis.myCodeMirror) {
@@ -313,7 +326,7 @@ document.addEventListener('alpine:init', () => {
             if (globalThis.pythonWorker && this.installedPackages.length > 0) {
                 globalThis.pythonWorker.postMessage({ type: "INSTALL", package: this.installedPackages, isSilent: true });
             }
-            
+
             if (!isFirstLoad) showToast(`Switched to project: ${projName}`, 'success');
         },
 
@@ -424,7 +437,7 @@ document.addEventListener('alpine:init', () => {
                 setTimeout(() => document.getElementById('project_action_input').focus(), 100);
             }
         },
-        
+
         submitProjectAction() {
             if (this.projectActionCallback) {
                 this.projectActionCallback();
@@ -476,15 +489,15 @@ document.addEventListener('alpine:init', () => {
 
         toggleLineWrap() {
             localStorage.setItem('lineWrapping', this.lineWrapping);
-            if(globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('lineWrapping', this.lineWrapping);
+            if (globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('lineWrapping', this.lineWrapping);
         },
         toggleCodeFolding() {
             localStorage.setItem('codeFolding', this.codeFolding);
-            if(globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('foldGutter', this.codeFolding);
+            if (globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('foldGutter', this.codeFolding);
         },
         toggleBracketMastery() {
             localStorage.setItem('bracketMastery', this.bracketMastery);
-            if(globalThis.myCodeMirror) {
+            if (globalThis.myCodeMirror) {
                 globalThis.myCodeMirror.setOption('matchBrackets', this.bracketMastery);
                 globalThis.myCodeMirror.setOption('autoCloseBrackets', this.bracketMastery);
             }
@@ -542,7 +555,7 @@ document.addEventListener('alpine:init', () => {
             document.documentElement.style.setProperty('--fg', t.fg);
             document.documentElement.style.setProperty('--menu', t.menu);
             document.documentElement.style.setProperty('--hil', t.accent);
-            
+
             if (globalThis.myCodeMirror) {
                 globalThis.myCodeMirror.setOption('theme', t.cm);
                 document.getElementById('editor').style.backgroundColor = t.bg;
@@ -594,7 +607,7 @@ document.addEventListener('alpine:init', () => {
         async switchFile(filename) {
             if (filename === this.activeFile) return;
             await this.saveCurrentFile(); // saves to code mirror and pushes to DB
-            
+
             const file = this.files.find(f => f.name === filename);
             if (file && globalThis.myCodeMirror) {
                 globalThis.myCodeMirror.setValue(file.code);
@@ -636,7 +649,7 @@ document.addEventListener('alpine:init', () => {
                 showToast(`File "${newName}" already exists`, 'warning');
                 return;
             }
-            
+
             const wasActive = this.activeFile === oldName;
             this.files = this.files.map(f =>
                 f.name === oldName ? { ...f, name: newName, active: wasActive } : f
@@ -730,8 +743,8 @@ document.addEventListener('alpine:init', () => {
                 zip.file(f.name, f.code);
             }
             zip.file('manifest.json', JSON.stringify({ packages: this.installedPackages || [] }, null, 2));
-            
-            const content = await zip.generateAsync({type:"blob"});
+
+            const content = await zip.generateAsync({ type: "blob" });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(content);
             a.download = `${this.currentProject}.nu`;
@@ -744,18 +757,18 @@ document.addEventListener('alpine:init', () => {
                 const [handle] = await window.showOpenFilePicker({
                     types: [{
                         description: 'Python or Nuilith Project',
-                        accept: {'*/*': ['.py', '.nu']}
+                        accept: { '*/*': ['.py', '.nu'] }
                     }]
                 });
                 const file = await handle.getFile();
-                
+
                 if (file.name.endsWith('.nu')) {
                     const zip = await JSZip.loadAsync(file);
                     const projName = file.name.replace('.nu', '');
-                    
+
                     let manifest = { packages: [] };
                     let importedFiles = [];
-                    
+
                     for (let relativePath in zip.files) {
                         if (relativePath === 'manifest.json') {
                             const mStr = await zip.file(relativePath).async('string');
@@ -765,7 +778,7 @@ document.addEventListener('alpine:init', () => {
                             importedFiles.push({ name: relativePath, active: false, code: content });
                         }
                     }
-                    
+
                     if (importedFiles.length === 0) {
                         importedFiles = [{ name: 'main.py', active: true, code: '' }];
                     } else {
@@ -780,7 +793,7 @@ document.addEventListener('alpine:init', () => {
                     } else {
                         await this.saveImportedProject(projName, importedFiles, manifest.packages || []);
                     }
-                    
+
                 } else if (file.name.endsWith('.py')) {
                     const text = await file.text();
                     if (!this.files.find(f => f.name === file.name)) {
@@ -800,7 +813,7 @@ document.addEventListener('alpine:init', () => {
             const modal = document.getElementById('project_collision_modal');
             const data = this.collisionTempData;
             const targetName = this.collisionProjectName;
-            
+
             if (action === 'overwrite') {
                 await this.saveImportedProject(targetName, data.files, data.packages);
                 modal.close();
@@ -842,9 +855,9 @@ window.addEventListener('load', async () => {
         try {
             const reg = await navigator.serviceWorker.register('sw.js');
             await navigator.serviceWorker.ready;
-            
+
             if (!navigator.serviceWorker.controller) {
-                location.reload(); 
+                location.reload();
                 return;
             }
 
@@ -864,7 +877,7 @@ window.addEventListener('load', async () => {
     }
 
     // 2. Terminal Initialization
-    globalThis.term = $('#terminal').terminal(async function(command) {
+    globalThis.term = $('#terminal').terminal(async function (command) {
         const cmd = command.trim();
         if (window.ideStateData && window.ideStateData.inRepl) {
             if (cmd === "exit()" || cmd === "quit()" || cmd === "exit" || cmd === "quit") {
@@ -961,13 +974,13 @@ window.addEventListener('load', async () => {
                 if (cm.somethingSelected()) return CodeMirror.Pass;
                 const cursor = cm.getCursor();
                 const lineContent = cm.getLine(cursor.line);
-                
+
                 if (cursor.ch > 0) {
                     const textBeforeCursor = lineContent.substring(0, cursor.ch);
                     if (/^\s+$/.test(textBeforeCursor)) {
                         const indentUnit = cm.getOption("indentUnit") || 4;
                         const spacesToRemove = cursor.ch % indentUnit === 0 ? indentUnit : (cursor.ch % indentUnit);
-                        cm.replaceRange("", {line: cursor.line, ch: cursor.ch - spacesToRemove}, cursor);
+                        cm.replaceRange("", { line: cursor.line, ch: cursor.ch - spacesToRemove }, cursor);
                         return;
                     }
                 }
@@ -982,7 +995,7 @@ window.addEventListener('load', async () => {
     });
 
     // Auto-trigger hint dropdown when user types a dot
-    globalThis.myCodeMirror.on("inputRead", function(cm, change) {
+    globalThis.myCodeMirror.on("inputRead", function (cm, change) {
         if (change.text[0] === ".") {
             CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
         }
