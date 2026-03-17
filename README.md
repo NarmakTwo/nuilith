@@ -1,68 +1,97 @@
+<div align="center">
+  <img src="https://nuilith.onrender.com/assets/icon.png" alt="Python Logo" width="80" />
+  
+  <h1>Nuilith Python IDE</h1>
+  
+  <p>
+    <strong>A frontend-only, offline-capable Python IDE running entirely in the browser.</strong>
+  </p>
 
-# Nuilith Python IDE
+  <p>
+    <a href="https://nuilith.onrender.com/" target="_blank">
+      <img src="https://img.shields.io/badge/View%20Live-nuilith.onrender.com-brightgreen?style=for-the-badge&logo=render" alt="Live Site on Render" />
+    </a>
+    <a href="https://github.com/NarmakTwo/python-ide/stargazers">
+      <img src="https://img.shields.io/github/stars/NarmakTwo/python-ide?style=for-the-badge&logo=github" alt="GitHub Stars" />
+    </a>
+  </p>
 
-A browser-based Python IDE that runs entirely offline. No server, no backend, no account. You write code, it runs in the tab.
+  <p>
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/NarmakTwo/python-ide">
+      <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+    </a>
+    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/NarmakTwo/python-ide">
+      <img src="https://www.netlify.com/img/deploy/button.svg" alt="Deploy to Netlify" />
+    </a>
+    <a href="https://render.com/deploy?repo=https://github.com/NarmakTwo/python-ide">
+      <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+    </a>
+  </p>
+</div>
 
-The name is Neo-Latin for "No Stupid". Make of that what you will.
+---
 
-## Background
+Nuilith is a static, browser-based Python development environment. It leverages [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly) to execute Python code entirely on the client side without a backend. Once the initial assets (Pyodide and Pyflakes) are fetched and cached by a Service Worker, the IDE is fully functional offline.
 
-Nuilith started as a riff on the Programiz online IDE. Same general layout, same editor feel, same kind of audience. The difference is that Programiz requires a server to execute code. Nuilith doesn't. Everything runs locally in the browser through Pyodide (Python compiled to WebAssembly), so once the page has loaded once, it works without any connection at all.
+## Core Architecture
 
-The editor theme is also replicated from Programiz's theme.
+Execution and UI rendering are strictly decoupled across three primary domains:
 
-## Fully static and offline-capable
+1. **Main Thread (`index.js`)**: Manages the UI layer using Alpine.js for reactive state, CodeMirror (v5) for the code editor, and jQuery Terminal for the output pane. It handles dynamic layout sizing, keyboard event binding, and forwards serialized execution commands to the worker.
+2. **Web Worker (`worker.js`)**: Houses the WebAssembly Pyodide runtime environment. It is isolated from the DOM to ensure intensive Python script execution does not lock the browser's UI thread. It parses execution blocks and pipes `stdout`/`stderr` back to the terminal.
+3. **Service Worker (`sw.js`)**: Initially responsible for caching core static assets for offline capability, it intrinsically acts as a reverse proxy for handling synchronous OS-level I/O blocking scenarios from the Web Worker.
 
-There is no backend. The entire IDE is static files: HTML, JS, and CSS. You can host it on GitHub Pages, Netlify, an S3 bucket, or just `npx serve .` from your machine. After the first load, the Service Worker caches everything and the IDE works with no internet connection.
+<details>
+<summary><strong>The <code>input()</code> Execution Model</strong></summary>
+<br>
 
-The only caveat is that on first load, Pyodide (~10MB) and pyflakes have to download. After that, they're cached and subsequent loads are instant regardless of connectivity.
+A significant challenge in WebAssembly Python runtimes is that native Python's `input()` is a blocking call. Blocking the browser's main thread to await DOM interaction is functionally impossible. Nuilith solves this using a synchronous XMLHttpRequest intercept mechanism:
 
-## What it does
+1. When `input()` is called via Pyodide, the Web Worker drops into a synchronous XHR call to a dummy endpoint (`/get_input`). This suspends the worker thread indefinitely until a response is received.
+2. The Service Worker intercepts all outgoing HTTP requests and traps hits to `/get_input`.
+3. The Service Worker communicates with the Main Thread via `postMessage`, dispatching a UI event that triggers the jQuery Terminal instance to prompt the user.
+4. The Main Thread awaits the user's keystrokes asynchronously. Once submitted, it sends the string back to the Service Worker via a dedicated `MessageChannel`.
+5. The Service Worker receives the payload, synthesizes an HTTP 200 response containing the raw text, and manually resolves the intercepted XHR request.
+6. The Web Worker's synchronous XHR completes, receiving the user's input string, and Pyodide execution proceeds sequentially.
 
-Nuilith gives you a split-pane editor and terminal in the browser. The left side is a CodeMirror editor with Python syntax highlighting, line numbers, and live linting via pyflakes. The right side is an interactive terminal where your program's output appears. You can resize the split by dragging the divider.
+> **Note on Headers**: This mechanism relies entirely on Cross-Origin Isolation (COI) to unlock precise synchronization primitives and `SharedArrayBuffer` capabilities under Chromium's strict security models. The project utilizes the `coi-serviceworker.min.js` shim to forcefully inject headers. When deploying, ensure `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` are present either via your CDN/Host configuration or the included shim.
 
-Python runs inside a Web Worker so the UI stays responsive. `input()` is handled via a synchronous XHR trick routed through a Service Worker, which means programs that call `input()` actually pause and wait for the user to type, the same way they would in a real terminal.
+</details>
 
-Code is autosaved to IndexedDB every 30 seconds and restored when you reopen the page.
+<details>
+<summary><strong>Filesystem & Project Management</strong></summary>
+<br>
 
-## Getting started
+Nuilith features a built-in virtual workspace system backed by the browser's `IndexedDB` API.
 
-Clone the repo and serve it over HTTPS or localhost. It won't work from a `file://` path because Service Workers require a secure context.
+- **Persistent Projects Directory**: The `projects` object store tracks metadata for separate workspaces. Each workspace acts as an independent array of virtual `.py` files, active states, and specific `micropip` dependencies.
+- **Auto-save Protocol**: The Main Thread captures CodeMirror buffer mutations every 30 seconds (or immediately on execution) and continuously commits the differential state to IndexedDB.
+- **Import/Export System (`.nu` Format)**: Entire workspaces can be exported as zipped `.nu` archives via JSZip. This bundles the in-memory Python scripts alongside a `manifest.json` indicating the required PyPI packages for the project wrapper, allowing full environment restoration upon import.
 
-```
+</details>
+
+## Features
+
+- **Runtime Dependency Resolution**: Package imports are automatically detected via static analysis (scanning for `import` statements) prior to execution. The IDE automatically invokes `micropip.install()` to grab pure-Python packages from PyPI dynamically. Note: Packages requiring native C-extensions that haven't been precompiled for WebAssembly in Pyodide are not supported.
+- **Interactive Multi-File Editing**: Projects support multiple files cleanly managed through Alpine.js reactive states, allowing code organization beyond single-script buffers.
+- **Live Linting**: The worker evaluates Pyflakes payloads silently in the background and surfaces inline squiggle annotations directly inside CodeMirror without stuttering the UI.
+- **Zero Configuration Run**: Because it is purely static HTML/JS/CSS, it can run from `npx serve .`, GitHub Pages, AWS S3, or any basic HTTP daemon. *Note: It cannot be run directly via the `file://` protocol, as Service Workers require a secure context (`localhost` or HTTPS).*
+
+## Local Development Environment
+
+Clone the repository and spin up a local web server to bypass CORS limitations:
+
+```bash
+git clone https://github.com/NarmakTwo/python-ide
+cd python-ide
 npx serve .
 ```
 
-or any static file server will do. Open it in Chrome or Firefox.
+Access the development environment in a modern browser (Chrome or Firefox) via `http://localhost:3000`. 
 
-## Keyboard shortcuts
+## Keyboard Shortcuts
 
-- `Ctrl+Enter` — run the current code
-- `Ctrl+S` — save to IndexedDB
-- `Ctrl+Space` — trigger autocomplete
-- Typing a `.` after a variable will suggest methods automatically
-
-The toolbar also has Import and Export buttons for loading/saving `.py` files from disk.
-
-## How it works
-
-The architecture is three pieces talking to each other: the page (`index.js`), a Web Worker (`worker.js`), and a Service Worker (`sw.js`).
-
-The worker loads Pyodide and handles all Python execution. It also does linting by running pyflakes inside Pyodide and sending annotations back to CodeMirror. When Python code calls `input()`, it fires a synchronous XHR to `/get_input`. The Service Worker intercepts that request, sends a message to the page asking for user input, waits on a MessageChannel port, and resolves the response once the user types something. From Python's perspective it just looks like a blocking `input()` call.
-
-## Dependencies
-
-All loaded from CDN at runtime — nothing to install.
-
-- Pyodide 0.27 for the Python runtime
-- CodeMirror 5 for the editor
-- jQuery Terminal for the output pane
-- Alpine.js for the small tooltip UI
-- Tailwind CSS (browser build) for layout
-- pyflakes (installed via micropip on first lint)
-
-## Notes
-
-The synchronous XHR + Service Worker input trick only works because of the Cross-Origin Isolation headers that `coi-serviceworker.min.js` injects. Without those headers, SharedArrayBuffer-based alternatives would be needed. If you deploy this somewhere, make sure those headers are present or include the coi-serviceworker shim.
-
-Package imports are auto-detected at runtime by scanning the code for `import` statements and running `micropip.install()` before execution. This works for pure-Python packages available on PyPI. Packages with native extensions won't install this way.
+- `Ctrl`+`Enter` — Execute script (implicitly saves current buffer to IndexedDB)
+- `Ctrl`+`S` — Save raw buffer to IndexedDB manually
+- `Ctrl`+`Space` — Trigger CodeMirror autocomplete
+- `.` (typing a period after an object reference) — Auto-suggests class/instance methods

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: nuilith-ide
+    env: static
+    buildCommand: "echo 'No build required'"
+    staticPublishPath: .
