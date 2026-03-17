@@ -3,7 +3,7 @@
  * Handlers: Offline Cache + Synchronous Input Bridge
  */
 
-const CACHE_NAME = 'nuilith-cache-v9';
+const CACHE_NAME = 'nuilith-cache-v10';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [
@@ -54,7 +54,11 @@ const CDN_ASSETS = [
     'https://unpkg.com/codemirror@5.65.21/addon/edit/closebrackets.js',
     'https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.js',
     'https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.css',
+    'https://unpkg.com/codemirror@5.65.21/addon/fold/foldcode.js',
     'https://unpkg.com/codemirror@5.65.21/addon/fold/indent-fold.js',
+    'https://unpkg.com/codemirror@5.65.21/addon/fold/brace-fold.js',
+    'https://unpkg.com/codemirror@5.65.21/addon/edit/matchbrackets.js',
+    'https://unpkg.com/codemirror@5.65.21/addon/selection/active-line.js',
     'https://unpkg.com/codemirror@5.65.21/addon/lint/lint.js',
     'https://unpkg.com/codemirror@5.65.21/addon/lint/lint.css',
     'https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.js',

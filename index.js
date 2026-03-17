@@ -140,6 +140,11 @@ document.addEventListener('alpine:init', () => {
         fontSize: parseInt(localStorage.getItem('fontSize')) || 16,
         lineNumbers: localStorage.getItem('lineNumbers') !== 'false',
         keybindings: localStorage.getItem('keybindings') || 'default',
+        lineWrapping: localStorage.getItem('lineWrapping') === 'true',
+        codeFolding: localStorage.getItem('codeFolding') !== 'false',
+        bracketMastery: localStorage.getItem('bracketMastery') !== 'false',
+        activeLineMode: localStorage.getItem('activeLineMode') || 'non-latest',
+        inRepl: false,
 
         // Project system (.nu)
         currentProject: localStorage.getItem('currentProject') || 'default',
@@ -183,6 +188,7 @@ document.addEventListener('alpine:init', () => {
             this.applyTheme();
             this.updateFontSize();
             this.updateLineNumbers();
+            setTimeout(() => this.applyActiveLineHighlight(), 500);
 
             await this.initDB();
             await this.loadProjectList();
@@ -465,6 +471,53 @@ document.addEventListener('alpine:init', () => {
             localStorage.setItem('featureTabs', this.featureTabs);
             localStorage.setItem('featurePackages', this.featurePackages);
             localStorage.setItem('featureToasts', this.featureToasts);
+        },
+
+        toggleLineWrap() {
+            localStorage.setItem('lineWrapping', this.lineWrapping);
+            if(globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('lineWrapping', this.lineWrapping);
+        },
+        toggleCodeFolding() {
+            localStorage.setItem('codeFolding', this.codeFolding);
+            if(globalThis.myCodeMirror) globalThis.myCodeMirror.setOption('foldGutter', this.codeFolding);
+        },
+        toggleBracketMastery() {
+            localStorage.setItem('bracketMastery', this.bracketMastery);
+            if(globalThis.myCodeMirror) {
+                globalThis.myCodeMirror.setOption('matchBrackets', this.bracketMastery);
+                globalThis.myCodeMirror.setOption('autoCloseBrackets', this.bracketMastery);
+            }
+        },
+        toggleActiveLine() {
+            localStorage.setItem('activeLineMode', this.activeLineMode);
+            this.applyActiveLineHighlight();
+        },
+        applyActiveLineHighlight() {
+            if (!globalThis.myCodeMirror) return;
+            if (this.activeLineMode === 'off') {
+                globalThis.myCodeMirror.setOption('styleActiveLine', false);
+            } else {
+                globalThis.myCodeMirror.setOption('styleActiveLine', true);
+            }
+            if (this.activeLineMode !== 'non-latest') {
+                globalThis.myCodeMirror.getWrapperElement().classList.remove('hide-active-line');
+            } else {
+                const cm = globalThis.myCodeMirror;
+                if (cm.getCursor().line === cm.lastLine()) {
+                    cm.getWrapperElement().classList.add('hide-active-line');
+                }
+            }
+        },
+        startRepl() {
+            this.inRepl = !this.inRepl;
+            if (this.inRepl) {
+                globalThis.term.set_prompt('>>> ');
+                globalThis.term.echo('[[b;blue;]Python 3 Interactive REPL Started]');
+                globalThis.term.echo('Type "exit()" or click Start REPL again to quit.');
+            } else {
+                globalThis.term.set_prompt(globalThis.nuilithPrompt);
+                globalThis.term.echo('[[b;gray;]Exited REPL.]');
+            }
         },
 
         // ---- Theme Methods ----
@@ -823,9 +876,24 @@ window.addEventListener('load', async () => {
     // 2. Terminal Initialization
     globalThis.term = $('#terminal').terminal(async function(command) {
         const cmd = command.trim();
+        if (window.ideStateData && window.ideStateData.inRepl) {
+            if (cmd === "exit()" || cmd === "quit()" || cmd === "exit" || cmd === "quit") {
+                window.ideStateData.startRepl();
+                return;
+            }
+            if (cmd === "") return;
+            pythonWorker.postMessage({ type: "EVAL_REPL", code: cmd });
+            term.pause();
+            return;
+        }
+
         if (cmd === "run") runcode();
         else if (cmd === "clear") term.clear();
-        else if (cmd === "help") term.echo("Commands: run, clear, help");
+        else if (cmd === "python" || cmd === "python3") {
+            if (window.ideStateData) window.ideStateData.startRepl();
+        }
+        else if (cmd === "help") term.echo("Commands: run, clear, python, help");
+        else term.echo(`Command '${cmd}' not found`);
     }, {
         greetings: 'Nuilith Python',
         prompt: globalThis.nuilithPrompt
@@ -890,7 +958,12 @@ window.addEventListener('load', async () => {
         mode: "python",
         theme: "programiz",
         lineNumbers: true,
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-lint-markers"],
+        lineWrapping: window.ideStateData ? window.ideStateData.lineWrapping : false,
+        foldGutter: window.ideStateData ? window.ideStateData.codeFolding : true,
+        matchBrackets: window.ideStateData ? window.ideStateData.bracketMastery : true,
+        autoCloseBrackets: window.ideStateData ? window.ideStateData.bracketMastery : true,
+        styleActiveLine: window.ideStateData ? (window.ideStateData.activeLineMode !== 'off') : true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
         lint: { getAnnotations: CodeMirror.lint.python || (() => []), async: true, delay: 600 },
         indentUnit: 4,
         extraKeys: {
@@ -906,6 +979,18 @@ window.addEventListener('load', async () => {
     globalThis.myCodeMirror.on("inputRead", function(cm, change) {
         if (change.text[0] === ".") {
             CodeMirror.commands.autocomplete(cm, null, { completeSingle: false });
+        }
+    });
+
+    // Handle Active Line Highlighting Non-Latest mode
+    globalThis.myCodeMirror.on('cursorActivity', (cm) => {
+        if (window.ideStateData && window.ideStateData.activeLineMode === 'non-latest') {
+            const cursor = cm.getCursor();
+            if (cursor.line === cm.lastLine()) {
+                cm.getWrapperElement().classList.add('hide-active-line');
+            } else {
+                cm.getWrapperElement().classList.remove('hide-active-line');
+            }
         }
     });
 

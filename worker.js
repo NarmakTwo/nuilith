@@ -146,6 +146,36 @@ json.dumps(sorted([str(p) for p in micropip.list()]))
         return;
     }
 
+    if (type === "EVAL_REPL") {
+        if (!pyodide) return;
+        
+        const decoder = new TextDecoder("utf-8");
+        pyodide.setStdout({
+            write: (buffer) => {
+                try { postToUI("PRINT", decoder.decode(buffer)); } catch(e) {}
+                return buffer.length;
+            }
+        });
+        pyodide.setStderr({
+            write: (buffer) => {
+                try { postToUI("ERROR", decoder.decode(buffer)); } catch(e) {}
+                return buffer.length;
+            }
+        });
+
+        try {
+            const result = await pyodide.runPythonAsync(code);
+            if (result !== undefined) {
+                postToUI("PRINT", String(result) + "\\n");
+            }
+            postToUI("FINISHED", "");
+        } catch (err) {
+            postToUI("ERROR", err.message + "\\n");
+            postToUI("FINISHED", "");
+        }
+        return;
+    }
+
     if (type === "RUN") {
         if (!pyodide) return;
 
