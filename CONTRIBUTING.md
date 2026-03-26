@@ -63,6 +63,7 @@ We are looking for help with several major features:
 * **Multi-language Support**: Integrating runtimes for Node.js, C/C++, Ruby, Go, and Lua (via WASM).
 * **Backend & Hosting**: Building a light backend for persistence and better collaboration features.
 * **Enhanced Sidebar**: Adding a sidebar for file selection, extensions, and workspace management.
+* **Monaco Editor**: Switching to the Monaco editor for a more IDE-ajacent experience.
 
 ---
 
