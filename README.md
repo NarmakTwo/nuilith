@@ -105,6 +105,7 @@ Nuilith is evolving! We have ambitious plans for the future and are looking for 
 - [ ] **Multi-Language Runtimes**: Expand beyond Python to support Node.js, C/C++, Ruby, Go, and Lua.
 - [ ] **Backend & Cloud Persistence**: Implement a reliable backend for project hosting and collaboration.
 - [ ] **Enhanced Sidebar**: Add a sidebar for file selection, possible extensions, and a more integrated developer experience.
+- [ ] **Switch to Monaco**: Switch to the fully featured code editor from VS Code.
 
 ## Contributing
 
