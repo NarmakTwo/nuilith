@@ -5,12 +5,43 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="google-site-verification" content="CpAng4m2FN9I3xtFIFi9GPz4MOLer0KbxNSsX8OgLrM" />
         <meta name="theme-color" content="#1c2130" />
-        <!-- openrouter tags -->
-        <meta property="og:title" content="Nuilith IDE" />
-        <meta property="og:description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
-        <meta property="description" content="Advanced Python IDE with multi-theme support, execution control, and customizable editor settings." />
-        <meta property="og:image" content="/assets/icon.png" />
-        <title>Nuilith Python IDE</title>
+        <!-- Primary Meta Tags & SEO -->
+        <title>Nuilith | Free Python Compiler & IDE</title>
+        <meta name="description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+        <meta name="keywords" content="free python compiler, free python ide, online python compiler, online python ide, run python online, python browser editor">
+        <link rel="canonical" href="https://nuilith.onrender.com/" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://nuilith.onrender.com/" />
+        <meta property="og:title" content="Nuilith | Free Python Compiler & IDE" />
+        <meta property="og:description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+        <meta property="og:image" content="https://nuilith.onrender.com/assets/icon.png" />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://nuilith.onrender.com/" />
+        <meta property="twitter:title" content="Nuilith | Free Python Compiler & IDE" />
+        <meta property="twitter:description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+        <meta property="twitter:image" content="https://nuilith.onrender.com/assets/icon.png" />
+
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Nuilith | Free Python Compiler & IDE",
+          "url": "https://nuilith.onrender.com/",
+          "description": "Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "All",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+        </script>
 
         <!-- PWA Manifest -->
         <link rel="manifest" href="/manifest.json" />
@@ -88,11 +119,11 @@
         <!-- Header -->
         <div class="flex items-center gap-4 m-2" id="info" x-show="!zenMode">
             <h1 class="text-2xl text-center bg-gray-800 border border-gray-700 pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
-                <img src="/assets/icon.png" class="w-10 h-10 inline-block mr-2" />
+                <img src="/assets/icon.png" alt="Nuilith Logo" class="w-10 h-10 inline-block mr-2" />
                 <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
             </h1>
 
-            <button @click="settingsOpen = true" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
+            <button @click="settingsOpen = true" aria-label="Settings" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -124,7 +155,7 @@
 
             <!-- Projects Dropdown -->
             <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
+                <div tabindex="0" role="button" aria-label="Projects Menu" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </div>
                 <ul tabindex="0" class="dropdown-content z-[100] menu p-2 shadow bg-gray-800 rounded-box w-56 text-white border border-gray-700 mt-2">
@@ -152,7 +183,7 @@
         </div>
 
         <!-- Main IDE Layout -->
-        <div class="flex w-full overflow-hidden" 
+        <main class="flex w-full overflow-hidden" 
              :style="zenMode ? 'height: 100vh; margin-top: 0;' : 'height: calc(100vh - 120px); margin-top: 10px;'" 
              id="doublepanel">
             
@@ -291,7 +322,7 @@
                 </div>
                 <div id="terminal"></div>
             </div>
-        </div>
+        </main>
 
         <!-- ============ SETTINGS MODAL ============ -->
         <div x-show="settingsOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
@@ -421,6 +452,10 @@
                     <section>
                         <h3 class="text-lg font-semibold text-gray-300 mb-4">System Maintenance</h3>
                         <div class="flex flex-wrap gap-3">
+                            <button x-show="canInstall" @click="installPWA(); settingsOpen = false;" class="btn btn-sm btn-outline btn-success shadow-lg" x-cloak>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Install App
+                            </button>
                             <button @click="clearCodeCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Code Cache</button>
                             <button @click="clearSiteCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Site Cache</button>
                             <button @click="resetToDefaults()" class="btn btn-sm btn-outline btn-error text-red-200">Reset All to Defaults</button>

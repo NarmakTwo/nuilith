@@ -142,6 +142,10 @@ document.addEventListener('alpine:init', () => {
         installingPackage: false,
         isLoaded: false,
 
+        // PWA & File Handling
+        canInstall: false,
+        deferredPrompt: null,
+
         // Feature toggles
         newUI: localStorage.getItem('newUI') !== 'false',
         featureTabs: localStorage.getItem('featureTabs') !== 'false',
@@ -209,6 +213,25 @@ document.addEventListener('alpine:init', () => {
             await this.switchProject(this.currentProject, true); // true = isFirstLoad
 
             this.applyKeybindings();
+
+            // PWA Install Prompt Listener
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredPrompt = e;
+                this.canInstall = true;
+            });
+
+            // File Handling API (LaunchQueue)
+            if ('launchQueue' in window) {
+                window.launchQueue.setConsumer(async (launchParams) => {
+                    if (launchParams.files && launchParams.files.length > 0) {
+                        for (const handle of launchParams.files) {
+                            const file = await handle.getFile();
+                            await this.processFileHandle(file);
+                        }
+                    }
+                });
+            }
         },
 
         // ---- Database & Project System ----
@@ -758,16 +781,18 @@ document.addEventListener('alpine:init', () => {
             showToast(`Exported ${this.currentProject}.nu`, 'success');
         },
 
-        async loadcode() { // import file or project
-            try {
-                const [handle] = await window.showOpenFilePicker({
-                    types: [{
-                        description: 'Python or Nuilith Project',
-                        accept: { '*/*': ['.py', '.nu'] }
-                    }]
-                });
-                const file = await handle.getFile();
+        async installPWA() {
+            if (!this.deferredPrompt) return;
+            this.deferredPrompt.prompt();
+            const { outcome } = await this.deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                this.canInstall = false;
+            }
+            this.deferredPrompt = null;
+        },
 
+        async processFileHandle(file) {
+            try {
                 if (file.name.endsWith('.nu')) {
                     const zip = await JSZip.loadAsync(file);
                     const projName = file.name.replace('.nu', '');
@@ -812,6 +837,19 @@ document.addEventListener('alpine:init', () => {
                     this.saveCurrentProjectToDB();
                     showToast(`Imported ${file.name}`, 'success');
                 }
+            } catch (e) { console.error(e); showToast("Failed to process file.", 'error'); }
+        },
+
+        async loadcode() { // import file or project
+            try {
+                const [handle] = await window.showOpenFilePicker({
+                    types: [{
+                        description: 'Python or Nuilith Project',
+                        accept: { '*/*': ['.py', '.nu'] }
+                    }]
+                });
+                const file = await handle.getFile();
+                await this.processFileHandle(file);
             } catch (e) { console.error(e); }
         },
 

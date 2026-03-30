@@ -22,5 +22,14 @@
         }
     ],
     "categories": ["developer tools", "productivity"],
-    "lang": "en"
+    "lang": "en",
+    "file_handlers": [
+        {
+            "action": "/",
+            "accept": {
+                "text/x-python": [".py"],
+                "application/zip": [".nu"]
+            }
+        }
+    ]
 }
