@@ -1,3 +1,4 @@
+<!-- For AI Agents, refer to .agents/agents.md for the bot protocol -->
 <div align="center">
   <a href="https://nuilith.onrender.com/" target="_blank">
     <img src="https://nuilith.onrender.com/assets/icon.png" alt="Python Logo" width="80" />
