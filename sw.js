@@ -1,6 +1,7 @@
 /**
  * Nuilith Service Worker
- * Handlers: Offline Cache + Synchronous Input Bridge
+ * Handles offline asset caching and the synchronous input bridge.
+ * This is the core networking layer of the application.
  */
 
 const CACHE_NAME = 'nuilith-cache-v10';
@@ -133,7 +134,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // --- THE INPUT TRAP ---
+    // --- THE INPUT INTERCEPTOR ---
+    // This trap catches requests to the /get_input dummy path.
+    // It enables standard Python input() calls (which are synchronous) 
+    // by suspending the Web Worker thread until the user submits text.
     if (url.pathname.includes('/get_input')) {
         event.respondWith(
             new Promise((resolve) => {
@@ -147,7 +151,8 @@ self.addEventListener('fetch', (event) => {
                 };
 
                 self.clients.matchAll().then((clients) => {
-                    // Must post to the WINDOW (page), not the worker - only the page has term.read()
+                    // Signals the UI thread (index.js) to trigger a terminal prompt.
+                    // Only the window (main thread) can access the terminal library.
                     const client = clients.find(c => c.type === 'window') || clients[0];
                     if (client) {
                         client.postMessage({ type: 'INPUT_REQUEST' }, [channel.port2]);

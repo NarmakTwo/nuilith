@@ -1,5 +1,8 @@
 /**
- * Nuilith Worker - Python Engine
+ * Nuilith Worker: Python Engine
+ * This worker encapsulates the Pyodide WebAssembly runtime.
+ * It is isolated from the main thread to ensure that long-running 
+ * Python scripts do not lock the user interface.
  */
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js");
 
@@ -10,12 +13,20 @@ function postToUI(type, text) {
     self.postMessage({ type: type, text: String(text) });
 }
 
+/**
+ * Initializes the Python environment by loading Pyodide and micropip.
+ * Sends a READY signal to the UI once the runtime is fully initialized.
+ */
 async function initPython() {
     pyodide = await loadPyodide();
     await pyodide.loadPackage("micropip");
     postToUI("READY", "Python Runtime Ready");
 }
 
+/**
+ * Main message handler for the Web Worker.
+ * Routes incoming signals from index.js to the appropriate Pyodide actions.
+ */
 self.onmessage = async (event) => {
     const { type, code, id } = event.data;
 
@@ -202,18 +213,22 @@ if 'colorama' in sys.modules:
     if (type === "RUN") {
         if (!pyodide) return;
 
-        // Setup the Sync Input Bridge FIRST
+        // Setup the Sync Input Bridge.
+        // Standard Python input() is synchronous and blocking.
+        // This bridge uses a synchronous XMLHttpRequest to a dummy path.
+        // The Service Worker (sw.js) intercepts this call to await user input.
         await pyodide.runPythonAsync(`
 import builtins, importlib
 from js import XMLHttpRequest, postToUI
 
-# Restore __import__ in case a previous run installed a bad hook
+# Restore __import__ for reliability
 builtins.__import__ = importlib.__import__
 
 def sync_input(prompt=""):
     if prompt:
         postToUI("PRINT", str(prompt))
     
+    # This call blocks the worker thread until the Service Worker responds
     request = XMLHttpRequest.new()
     request.open("GET", "/get_input?t=" + str(builtins.id(request)), False)
     try:

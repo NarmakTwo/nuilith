@@ -1,5 +1,7 @@
 /**
- * Nuilith IDE - Main UI Controller
+ * Nuilith IDE: Main UI Controller
+ * This script orchestrates the Alpine.js reactive state, 
+ * CodeMirror editor, and communication with the Web Worker.
  */
 
 let pythonWorker = null;
@@ -131,7 +133,11 @@ const pythonLint = function (text, callback) {
 pythonLint.async = true;
 CodeMirror.registerHelper("lint", "python", pythonLint);
 
-// ===== Alpine.js State =====
+/**
+ * Alpine.js State Management
+ * This object holds all reactive data for the IDE, 
+ * including settings, project files, and application state.
+ */
 document.addEventListener('alpine:init', () => {
     Alpine.data('ideState', () => ({
         settingsOpen: false,
@@ -142,7 +148,7 @@ document.addEventListener('alpine:init', () => {
         installingPackage: false,
         isLoaded: false,
 
-        // PWA & File Handling
+        // PWA Install and File Launch statuses
         canInstall: false,
         deferredPrompt: null,
 
@@ -201,16 +207,22 @@ document.addEventListener('alpine:init', () => {
             { id: 'hc-black', name: 'High Contrast', bg: '#000000', fg: '#ffffff', keyword: '#ffff00', func: '#00ff00', string: '#ff0000' }
         ],
 
+        /**
+         * Initialization lifecycle for the IDE.
+         * Apples initial themes, sizes, and establishes the IndexedDB connection.
+         */
         async init() {
             window.ideStateData = this;
             this.applyTheme();
             this.updateFontSize();
             this.updateLineNumbers();
+            // Minor delay to ensure editor is ready for highlight application.
             setTimeout(() => this.applyActiveLineHighlight(), 500);
 
             await this.initDB();
             await this.loadProjectList();
-            await this.switchProject(this.currentProject, true); // true = isFirstLoad
+            // Automatically switch to the last used project on first load.
+            await this.switchProject(this.currentProject, true); 
 
             this.applyKeybindings();
 
