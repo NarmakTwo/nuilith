@@ -70,9 +70,9 @@ body {
     backdrop-filter: blur(8px);
     border-radius: 0.75rem;
     box-shadow:
-        0 22px 45px rgba(0, 0, 0, 0.45),
+        0 22px 45px rgba(0, 0, 0, 0.25),
         0 0 0 1px rgba(148, 163, 184, 0.1);
-    border: 1px solid rgba(55, 65, 81, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.15);
     overflow: hidden;
     transition: background-color 0.3s ease;
 }
@@ -144,12 +144,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.2);
+    background: rgba(148, 163, 184, 0.4);
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.4);
+    background: rgba(148, 163, 184, 0.6);
 }
 
 /* Tab bar horizontal scroll */
@@ -265,4 +265,71 @@ input[type="range"].range::-moz-range-thumb {
     background: #6366f1;
     cursor: pointer;
     border: 2px solid #1f2937;
+}
+
+/* Theme-aware active and inactive tabs */
+.tab-active {
+    background-color: var(--hil) !important;
+    color: #ffffff !important;
+}
+
+.tab-inactive {
+    background-color: rgba(148, 163, 184, 0.15) !important;
+    color: var(--fg) !important;
+    opacity: 0.8;
+}
+
+.tab-inactive:hover {
+    background-color: rgba(148, 163, 184, 0.25) !important;
+    opacity: 1;
+}
+
+/* Theme-aware toolbar buttons */
+.btn-theme {
+    background-color: rgba(148, 163, 184, 0.15) !important;
+    color: var(--fg) !important;
+    border: 1px solid rgba(148, 163, 184, 0.25) !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-theme:hover {
+    background-color: rgba(148, 163, 184, 0.25) !important;
+    border-color: var(--hil) !important;
+}
+
+/* Theme-aware icons */
+.theme-icon {
+    filter: var(--icon-filter, none);
+}
+
+/* Theme-aware header boxes and top bar elements */
+.header-box {
+    background-color: var(--menu) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    color: var(--fg) !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.header-btn {
+    background-color: var(--menu) !important;
+    border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    color: var(--fg) !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.15s ease;
+}
+
+.header-btn:hover {
+    background-color: var(--hil) !important;
+    color: #ffffff !important;
+    border-color: var(--hil) !important;
+}
+
+/* Ensure CodeMirror gutters blend with the theme background */
+.CodeMirror-gutters {
+    background-color: var(--menu) !important;
+    border-right: 1px solid rgba(148, 163, 184, 0.15) !important;
+}
+
+.CodeMirror-linenumber {
+    color: var(--fg) !important;
+    opacity: 0.5;
 }

@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="google-site-verification" content="CpAng4m2FN9I3xtFIFi9GPz4MOLer0KbxNSsX8OgLrM" />
-        <meta name="theme-color" content="#1c2130" />
-        <!-- Primary Meta Tags & SEO -->
-        <title>Nuilith | Free Python Compiler & IDE</title>
-        <meta name="description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
-        <meta name="keywords" content="free python compiler, free python ide, online python compiler, online python ide, run python online, python browser editor">
-        <link rel="canonical" href="https://nuilith.onrender.com/" />
 
-        <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://nuilith.onrender.com/" />
-        <meta property="og:title" content="Nuilith | Free Python Compiler & IDE" />
-        <meta property="og:description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
-        <meta property="og:image" content="https://nuilith.onrender.com/assets/icon.png" />
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="CpAng4m2FN9I3xtFIFi9GPz4MOLer0KbxNSsX8OgLrM" />
+    <meta name="theme-color" content="#1c2130" />
+    <!-- Primary Meta Tags & SEO -->
+    <title>Nuilith | Free Python Compiler & IDE</title>
+    <meta name="description"
+        content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+    <meta name="keywords"
+        content="free python compiler, free python ide, online python compiler, online python ide, run python online, python browser editor">
+    <link rel="canonical" href="https://nuilith.onrender.com/" />
 
-        <!-- Twitter -->
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://nuilith.onrender.com/" />
-        <meta property="twitter:title" content="Nuilith | Free Python Compiler & IDE" />
-        <meta property="twitter:description" content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
-        <meta property="twitter:image" content="https://nuilith.onrender.com/assets/icon.png" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nuilith.onrender.com/" />
+    <meta property="og:title" content="Nuilith | Free Python Compiler & IDE" />
+    <meta property="og:description"
+        content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+    <meta property="og:image" content="https://nuilith.onrender.com/assets/icon.png" />
 
-        <!-- Structured Data -->
-        <script type="application/ld+json">
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://nuilith.onrender.com/" />
+    <meta property="twitter:title" content="Nuilith | Free Python Compiler & IDE" />
+    <meta property="twitter:description"
+        content="Nuilith is a fast, completely free Python IDE and free Python compiler that runs right in your browser. Features multi-theme support, package manager, and customizable editor settings." />
+    <meta property="twitter:image" content="https://nuilith.onrender.com/assets/icon.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
         {
           "@context": "https://schema.org",
           "@type": "WebApplication",
@@ -43,109 +48,124 @@
         }
         </script>
 
-        <!-- PWA Manifest -->
-        <link rel="manifest" href="/manifest.json" />
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
 
-        <!-- basic components -->
-        <script src="/coi-serviceworker.min.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/lib/codemirror.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/mode/python/python.js"></script>
-        <link rel="stylesheet" type="text/css" href="https://unpkg.com/codemirror@5.65.21/lib/codemirror.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/nord.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/rubyblue.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/vibrant-ink.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/dracula.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/monokai.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/solarized.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/idea.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/moxer.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material-darker.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/eclipse.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/oceanic-next.css">
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/blackboard.css">
-        <link rel="stylesheet" type="text/css" href="/programiz.css">
-        <script src="https://unpkg.com/alpinejs" defer></script>
+    <!-- basic components -->
+    <script src="/coi-serviceworker.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/lib/codemirror.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/mode/python/python.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/codemirror@5.65.21/lib/codemirror.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/nord.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/rubyblue.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/vibrant-ink.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/dracula.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/monokai.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/solarized.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/idea.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/moxer.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/material-darker.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/eclipse.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/oceanic-next.css">
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/blackboard.css">
+    <link rel="stylesheet" type="text/css" href="/programiz.css">
+    <script src="https://unpkg.com/alpinejs" defer></script>
 
-        <!-- codemirror addons -->
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/comment/comment.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/search/search.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/search/searchcursor.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/search/jump-to-line.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.css">
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/closebrackets.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.css">
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/foldcode.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/indent-fold.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/brace-fold.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/matchbrackets.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/selection/active-line.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/lint/lint.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/lint/lint.css">
-        <script src="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.css">
+    <!-- codemirror addons -->
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/comment/comment.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/search/search.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/search/searchcursor.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/search/jump-to-line.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/dialog/dialog.css">
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/closebrackets.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/fold/foldgutter.css">
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/foldcode.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/indent-fold.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/fold/brace-fold.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/edit/matchbrackets.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/selection/active-line.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/lint/lint.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/lint/lint.css">
+    <script src="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/addon/hint/show-hint.css">
 
-        <!-- codemirror keymaps -->
-        <script src="https://unpkg.com/codemirror@5.65.21/keymap/vim.js"></script>
-        <script src="https://unpkg.com/codemirror@5.65.21/keymap/emacs.js"></script>
+    <!-- codemirror keymaps -->
+    <script src="https://unpkg.com/codemirror@5.65.21/keymap/vim.js"></script>
+    <script src="https://unpkg.com/codemirror@5.65.21/keymap/emacs.js"></script>
 
-        <link rel="icon" type="image/png" href="/assets/icon.png" />
-        <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" href="/assets/icon.png" />
+    <link rel="stylesheet" type="text/css" href="style.css">
 
-        <!-- code and terminal stuff -->
-        <script src="https://unpkg.com/jquery@4.0.0/dist/jquery.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.45.2/css/jquery.terminal.css">
-        <script src="https://unpkg.com/jquery.terminal@2.45.2/js/jquery.terminal.js"></script>
-        <script src="https://unpkg.com/jquery.terminal@2.45.2/js/echo_newline.js"></script>
-        <script src="https://unpkg.com/jquery.terminal@2.45.2/js/unix_formatting.js"></script>
-        <script src="https://unpkg.com/js-polyfills/keyboard.js"></script>
-        <script src="https://cdn.jsdelivr.net/gh/jcubic/static/js/wcwidth.js"></script>
+    <!-- code and terminal stuff -->
+    <script src="https://unpkg.com/jquery@4.0.0/dist/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.45.2/css/jquery.terminal.css">
+    <script src="https://unpkg.com/jquery.terminal@2.45.2/js/jquery.terminal.js"></script>
+    <script src="https://unpkg.com/jquery.terminal@2.45.2/js/echo_newline.js"></script>
+    <script src="https://unpkg.com/jquery.terminal@2.45.2/js/unix_formatting.js"></script>
+    <script src="https://unpkg.com/js-polyfills/keyboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/jcubic/static/js/wcwidth.js"></script>
 
-        <!-- python runtime environment -->
-        <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
-        <script src="/index.js"></script>
+    <!-- python runtime environment -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js"></script>
+    <script src="/index.js"></script>
 
-    </head>
-    <body x-data="ideState" x-init="init()">
+</head>
 
-        <!-- Toast Container -->
-        <div id="toast-container" class="toast toast-end toast-top z-[100]" style="top: 1rem; right: 1rem;"></div>
+<body x-data="ideState" x-init="init()">
 
-        <!-- Header -->
-        <div class="flex items-center gap-4 m-2" id="info" x-show="!zenMode">
-            <h1 class="text-2xl text-center bg-gray-800 border border-gray-700 pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
-                <img src="/assets/icon.png" alt="Nuilith Logo" class="w-10 h-10 inline-block mr-2" />
-                <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
-            </h1>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast toast-end toast-top z-[100]" style="top: 1rem; right: 1rem;"></div>
 
-            <button @click="settingsOpen = true" aria-label="Settings" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </button>
+    <!-- Header -->
+    <div class="flex items-center gap-4 m-2" id="info" x-show="!zenMode">
+        <h1
+            class="text-2xl text-center header-box pt-4 pb-4 px-6 rounded-2xl flex items-center shadow-lg shadow-black/40">
+            <img src="/assets/icon.png" alt="Nuilith Logo" class="w-10 h-10 inline-block mr-2" />
+            <span class="clickable" @click="settingsOpen = true">Nuilith</span>&nbsp;Python IDE
+        </h1>
 
-            <!-- Project Action Modal -->
+        <button @click="settingsOpen = true" aria-label="Settings"
+            class="btn btn-circle btn-ghost header-btn shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" style="color: var(--fg);" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+
+        <!-- Project Action Modal -->
         <dialog id="project_action_modal" class="modal">
-            <div class="modal-box bg-gray-800 border border-gray-700 text-white shadow-2xl">
+            <div style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);" class="modal-box border shadow-2xl">
                 <h3 class="font-bold text-lg flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
                     <span x-text="projectActionTitle"></span>
                 </h3>
                 <p class="py-4" x-text="projectActionMessage"></p>
-                
+
                 <template x-if="projectActionType === 'prompt'">
-                    <input type="text" id="project_action_input" x-model="projectActionInput" class="input input-bordered w-full bg-gray-900 border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white" @keyup.enter="submitProjectAction()">
+                    <input type="text" id="project_action_input" x-model="projectActionInput"
+                        class="input input-bordered w-full" style="background-color: var(--bg); color: var(--fg);"
+                        @keyup.enter="submitProjectAction()">
                 </template>
 
                 <div class="modal-action mt-6 gap-2">
-                    <button class="btn btn-ghost hover:bg-gray-700" @click="document.getElementById('project_action_modal').close()">Cancel</button>
-                    <button class="btn" :class="projectActionType === 'delete' ? 'btn-error hover:bg-red-600' : 'btn-primary hover:bg-blue-600'" @click="submitProjectAction()" x-text="projectActionSubmitText"></button>
+                    <button class="btn btn-ghost hover:bg-black/10 hover:dark:bg-white/10"
+                        @click="document.getElementById('project_action_modal').close()">Cancel</button>
+                    <button class="btn"
+                        :class="projectActionType === 'delete' ? 'btn-error hover:bg-red-600' : 'btn-primary hover:bg-blue-600'"
+                        @click="submitProjectAction()" x-text="projectActionSubmitText"></button>
                 </div>
             </div>
             <form method="dialog" class="modal-backdrop">
@@ -153,391 +173,537 @@
             </form>
         </dialog>
 
-            <!-- Projects Dropdown -->
-            <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" aria-label="Projects Menu" class="btn btn-circle btn-ghost bg-gray-800 border border-gray-700 hover:bg-gray-700 shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <!-- Projects Dropdown -->
+        <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" aria-label="Projects Menu"
+                class="btn btn-circle btn-ghost header-btn shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" style="color: var(--fg);" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </div>
+            <ul tabindex="0"
+                style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
+                class="dropdown-content z-[100] menu p-2 shadow rounded-box w-56 border mt-2">
+                <li class="menu-title text-gray-400">
+                    <span class="flex justify-between items-center w-full">Projects <span
+                            class="badge badge-sm badge-neutral" x-text="projectsList.length"></span></span>
+                </li>
+                <div class="max-h-48 overflow-y-auto">
+                    <template x-for="proj in projectsList" :key="proj">
+                        <li>
+                            <a @mousedown.prevent="switchProject(proj); document.activeElement.blur();"
+                                :class="currentProject === proj ? 'tab-active font-bold' : 'hover:bg-black/10 hover:dark:bg-white/10'"
+                                class="flex items-center gap-2 cursor-pointer">
+                                <svg x-show="currentProject === proj" xmlns="http://www.w3.org/2000/svg"
+                                    class="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                <svg x-show="currentProject !== proj" xmlns="http://www.w3.org/2000/svg"
+                                    class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                    </path>
+                                </svg>
+                                <span x-text="proj" class="truncate max-w-[140px]"></span>
+                            </a>
+                        </li>
+                    </template>
                 </div>
-                <ul tabindex="0" class="dropdown-content z-[100] menu p-2 shadow bg-gray-800 rounded-box w-56 text-white border border-gray-700 mt-2">
-                    <li class="menu-title text-gray-400">
-                        <span class="flex justify-between items-center w-full">Projects <span class="badge badge-sm badge-neutral" x-text="projectsList.length"></span></span>
+                <div class="divider my-1 before:bg-black/10 dark:before:bg-white/10 after:bg-black/10 dark:after:bg-white/10"></div>
+                <li><a @mousedown.prevent="openProjectAction('new');" class="cursor-pointer hover:bg-black/10 hover:dark:bg-white/10"><svg
+                            xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+                        </svg> New Project</a></li>
+                <li><a @mousedown.prevent="openProjectAction('rename');" class="cursor-pointer"><svg
+                            xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg> Rename Current Project</a></li>
+                <li><a @mousedown.prevent="openProjectAction('delete');"
+                        class="text-red-400 hover:bg-red-900/50 hover:text-red-200 cursor-pointer"><svg
+                            xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 inline" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg> Delete Project</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Main IDE Layout -->
+    <main class="flex w-full overflow-hidden"
+        :style="zenMode ? 'height: 100vh; margin-top: 0;' : 'height: calc(100vh - 120px); margin-top: 10px;'"
+        id="doublepanel">
+
+        <style>
+            /* Essential CSS to pin CodeMirror and Terminal */
+            #left-pane,
+            #output {
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                /* Critical: allows children to shrink */
+            }
+
+            #editor,
+            #terminal {
+                flex: 1;
+                /* Grow to fill remaining space */
+                min-height: 0;
+                /* Prevent content from pushing height out */
+                position: relative;
+                /* Anchor for CodeMirror */
+            }
+
+            /* Force CodeMirror to fill the #editor div exactly */
+            .CodeMirror {
+                position: absolute !important;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100% !important;
+            }
+
+            /* Prevent the toolbar from ever squishing */
+            #toolbar-left,
+            #toolbar-right {
+                flex-shrink: 0;
+            }
+
+            /* Clean up terminal height */
+            .terminal {
+                height: 100% !important;
+            }
+        </style>
+
+        <!-- LEFT PANE: Editor -->
+        <div id="left-pane" :class="zenMode ? 'w-full' : 'w-1/2'" class="h-full pane transition-all duration-300">
+            <div style="background-color: var(--menu);" id="toolbar-left">
+                <ol class="flex flex-row p-2 items-center justify-between">
+
+                    <!-- File Tab Bar (feature-gated) -->
+                    <li x-show="newUI && featureTabs" class="flex items-center gap-1 overflow-x-auto tab-scroll mr-2"
+                        style="max-width: 50%;">
+                        <template x-for="f in files" :key="f.name">
+                            <div class="flex items-center">
+                                <!-- Rename Mode -->
+                                <template x-if="renamingFile === f.name">
+                                    <input type="text" x-model="renameValue" @keydown.enter="finishRename()"
+                                        @keydown.escape="cancelRename()" @blur="finishRename()"
+                                        x-init="$nextTick(() => $el.focus())"
+                                        class="input input-xs input-bordered w-24 bg-gray-700 text-white text-xs" />
+                                </template>
+                                <!-- Normal Tab -->
+                                <template x-if="renamingFile !== f.name">
+                                    <div class="join">
+                                        <button @click="switchFile(f.name)" @dblclick="startRename(f.name)"
+                                            :class="activeFile === f.name ? 'tab-active' : 'tab-inactive'"
+                                            class="btn btn-xs join-item rounded-l-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap border-none pr-1">
+                                            <span x-text="f.name"></span>
+                                        </button>
+                                        <button x-show="files.length > 1" @click="deleteFile(f.name)"
+                                            :class="activeFile === f.name ? 'tab-active' : 'tab-inactive'"
+                                            class="btn btn-xs join-item rounded-r-lg border-none px-1 h-6 min-h-6 opacity-70 hover:opacity-100 hover:bg-red-500 hover:text-white"
+                                            title="Delete file">&times;</button>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <!-- Add file button -->
+                        <button @click="createNewFile()" class="btn btn-xs btn-ghost text-gray-400 hover:text-white"
+                            title="New file">+</button>
                     </li>
-                    <div class="max-h-48 overflow-y-auto">
-                        <template x-for="proj in projectsList" :key="proj">
-                            <li>
-                                <a @mousedown.prevent="switchProject(proj); document.activeElement.blur();" :class="currentProject === proj ? 'bg-blue-600 font-bold' : ''" class="flex items-center gap-2 cursor-pointer">
-                                    <svg x-show="currentProject === proj" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                    <svg x-show="currentProject !== proj" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                                    <span x-text="proj" class="truncate max-w-[140px]"></span>
-                                </a>
-                            </li>
+
+                    <!-- Classic single-file tab (shown when tabs are off) -->
+                    <li x-show="!newUI || !featureTabs" class="items-center justify-center text-center">
+                        <p class="flex text-sm w-24 h-8 items-center justify-center rounded-lg tab-inactive font-mono"
+                            x-text="activeFile"></p>
+                    </li>
+
+                    <li class="flex items-center gap-2">
+                        <!-- Zen Mode Toggle -->
+                        <button
+                            @click="zenMode = !zenMode; setTimeout(() => { if(myCodeMirror) myCodeMirror.refresh(); }, 350)"
+                            class="btn btn-xs btn-theme" :class="zenMode ? 'btn-active' : ''"
+                            :title="zenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'">
+                            <svg x-show="!zenMode" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                            </svg>
+                            <svg x-show="zenMode" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7" />
+                            </svg>
+                        </button>
+
+                        <button class="btn btn-xs btn-theme" @click="loadcode();">
+                            <img class="w-4 h-4 p-0 theme-icon"
+                                src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import
+                        </button>
+
+                        <div class="dropdown dropdown-end">
+                            <div tabindex="0" role="button" class="btn btn-xs btn-theme m-0">
+                                <img class="w-4 h-4 p-0 theme-icon"
+                                    src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export
+                            </div>
+                            <ul tabindex="0"
+                                style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
+                                class="dropdown-content z-[200] menu p-1 shadow rounded-box w-44 border mt-1 space-y-1">
+                                <li><a @mousedown.prevent="savecode(); document.activeElement.blur();"
+                                        class="text-xs p-2.5 cursor-pointer hover:bg-black/10 hover:dark:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg> Export File (.py)</a></li>
+                                <li><a @mousedown.prevent="exportProject(); document.activeElement.blur();"
+                                        class="text-xs p-2.5 cursor-pointer hover:bg-black/10 hover:dark:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4 mr-1 text-purple-400" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path
+                                                d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                                            </path>
+                                        </svg> Export Project (.nu)</a></li>
+                            </ul>
+                        </div>
+                        <button @click="startRepl()" class="btn btn-xs btn-outline btn-success"
+                            :class="inRepl ? 'btn-active bg-green-900 border-none' : ''">Start REPL</button>
+                        <template x-if="!running">
+                            <button class="btn btn-xs btn-primary" id="runbutton" onclick="runcode();">Run</button>
+                        </template>
+                        <template x-if="running">
+                            <button class="btn btn-xs btn-error" id="stopbutton" onclick="stopcode();">Stop</button>
+                        </template>
+                    </li>
+                </ol>
+            </div>
+            <div id="editor" style="background-color: #1C2130;"></div>
+        </div>
+
+        <div id="divider" :class="{'hidden': zenMode}" class="pane-divider"></div>
+
+        <!-- RIGHT PANE: Output -->
+        <div id="output" x-show="!zenMode" class="w-1/2 h-full pane">
+            <div style="background-color: var(--menu);" id="toolbar-right">
+                <ol class="flex flex-row p-2 items-center justify-between">
+                    <li class="items-center justify-center text-center">
+                        <p
+                            class="flex text-sm w-20 h-8 items-center justify-center rounded-lg tab-inactive font-semibold">
+                            Output</p>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <!-- Packages button (feature-gated) -->
+                        <template x-if="newUI && featurePackages">
+                            <button @click="openPackages()" class="btn btn-xs btn-theme">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                Packages
+                            </button>
+                        </template>
+                        <button class="btn btn-xs btn-theme" onclick="term.clear();">Clear</button>
+                    </li>
+                </ol>
+            </div>
+            <div id="terminal"></div>
+        </div>
+    </main>
+
+    <!-- ============ SETTINGS MODAL ============ -->
+    <div x-show="settingsOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak
+        x-transition>
+        <div style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
+            class="border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/80"
+            @click.away="settingsOpen = false">
+            <div style="background-color: var(--menu); border-color: rgba(148, 163, 184, 0.1);"
+                class="p-6 border-b flex justify-between items-center sticky top-0 z-10">
+                <h2 class="text-2xl font-bold" style="color: var(--fg);">Settings</h2>
+                <button @click="settingsOpen = false"
+                    class="btn btn-circle btn-ghost btn-sm" style="color: var(--fg);">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-8">
+
+                <!-- Features Section -->
+                <section>
+                    <h3 class="text-lg font-semibold mb-4" style="color: var(--fg); opacity: 0.8;">Features</h3>
+                    <div class="space-y-3">
+                        <!-- New UI master toggle -->
+                        <div class="flex items-center justify-between p-3 rounded-xl" style="background-color: rgba(148, 163, 184, 0.1);">
+                            <div>
+                                <p class="font-medium" style="color: var(--fg);">New UI</p>
+                                <p class="text-xs" style="color: var(--fg); opacity: 0.5;">DaisyUI-styled buttons and components</p>
+                            </div>
+                            <input type="checkbox" class="toggle toggle-primary" :checked="newUI"
+                                @change="toggleNewUI()" />
+                        </div>
+                        <!-- Tabbed Editor -->
+                        <div class="flex items-center justify-between p-3 rounded-xl" style="background-color: rgba(148, 163, 184, 0.1);"
+                            :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                            <div>
+                                <p class="font-medium" style="color: var(--fg);">Tabbed Editor</p>
+                                <p class="text-xs" style="color: var(--fg); opacity: 0.5;">Multi-file editing with tabs</p>
+                            </div>
+                            <input type="checkbox" class="toggle toggle-primary" :checked="featureTabs"
+                                @change="toggleFeatureTabs()" :disabled="!newUI" />
+                        </div>
+                        <!-- Package Manager -->
+                        <div class="flex items-center justify-between p-3 rounded-xl" style="background-color: rgba(148, 163, 184, 0.1);"
+                            :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                            <div>
+                                <p class="font-medium" style="color: var(--fg);">Package Manager</p>
+                                <p class="text-xs" style="color: var(--fg); opacity: 0.5;">Install Python packages via micropip</p>
+                            </div>
+                            <input type="checkbox" class="toggle toggle-primary" :checked="featurePackages"
+                                @change="toggleFeaturePackages()" :disabled="!newUI" />
+                        </div>
+                        <!-- Toast Notifications -->
+                        <div class="flex items-center justify-between p-3 rounded-xl" style="background-color: rgba(148, 163, 184, 0.1);"
+                            :class="{ 'opacity-40 pointer-events-none': !newUI }">
+                            <div>
+                                <p class="font-medium" style="color: var(--fg);">Toast Notifications</p>
+                                <p class="text-xs" style="color: var(--fg); opacity: 0.5;">Non-blocking toasts instead of alert popups</p>
+                            </div>
+                            <input type="checkbox" class="toggle toggle-primary" :checked="featureToasts"
+                                @change="toggleFeatureToasts()" :disabled="!newUI" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Themes Section -->
+                <section>
+                    <h3 class="text-lg font-semibold mb-4" style="color: var(--fg); opacity: 0.8;">Themes</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <template x-for="t in themes" :key="t.id">
+                            <div @click="setTheme(t.id)"
+                                :class="theme === t.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 hover:border-gray-500'"
+                                style="background-color: rgba(148, 163, 184, 0.1);"
+                                class="cursor-pointer border-2 rounded-xl p-3 transition-all flex flex-col items-center">
+
+                                <!-- Code Preview Panel -->
+                                <div :style="`background: ${t.bg}; color: ${t.fg}`"
+                                    class="h-24 w-full rounded-md mb-2 shadow-inner overflow-hidden text-left p-3 text-[10px] sm:text-xs font-mono select-none flex flex-col justify-center">
+                                    <div><span :style="`color: ${t.keyword}`">def</span> <span
+                                            :style="`color: ${t.func}`">hello_world</span>():</div>
+                                    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span :style="`color: ${t.keyword}`">print</span>(<span
+                                            :style="`color: ${t.string}`">"Hello"</span>)</div>
+                                </div>
+
+                                <span class="text-sm font-medium block text-center mt-1" style="color: var(--fg);"
+                                    x-text="t.name"></span>
+                            </div>
                         </template>
                     </div>
-                    <div class="divider my-1 before:bg-gray-700 after:bg-gray-700"></div>
-                    <li><a @mousedown.prevent="openProjectAction('new');" class="cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg> New Project</a></li>
-                    <li><a @mousedown.prevent="openProjectAction('rename');" class="cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Rename Current Project</a></li>
-                    <li><a @mousedown.prevent="openProjectAction('delete');" class="text-red-400 hover:bg-red-900/50 hover:text-red-200 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete Project</a></li>
-                </ul>
-            </div>
-            
-        </div>
+                </section>
 
-        <!-- Main IDE Layout -->
-        <main class="flex w-full overflow-hidden" 
-             :style="zenMode ? 'height: 100vh; margin-top: 0;' : 'height: calc(100vh - 120px); margin-top: 10px;'" 
-             id="doublepanel">
-            
-            <style>
-                /* Essential CSS to pin CodeMirror and Terminal */
-                #left-pane, #output {
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 0; /* Critical: allows children to shrink */
-                }
-        
-                #editor, #terminal {
-                    flex: 1;           /* Grow to fill remaining space */
-                    min-height: 0;     /* Prevent content from pushing height out */
-                    position: relative; /* Anchor for CodeMirror */
-                }
-        
-                /* Force CodeMirror to fill the #editor div exactly */
-                .CodeMirror {
-                    position: absolute !important;
-                    top: 0; bottom: 0; left: 0; right: 0;
-                    height: 100% !important;
-                }
-        
-                /* Prevent the toolbar from ever squishing */
-                #toolbar-left, #toolbar-right {
-                    flex-shrink: 0;
-                }
-        
-                /* Clean up terminal height */
-                .terminal {
-                    height: 100% !important;
-                }
-            </style>
-        
-            <!-- LEFT PANE: Editor -->
-            <div id="left-pane" :class="zenMode ? 'w-full border-r-0' : 'w-1/2 border-r-4 border-gray-700'" class="h-full pane transition-all duration-300">
-                <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-left">
-                    <ol class="flex flex-row p-2 items-center justify-between">
-
-                        <!-- File Tab Bar (feature-gated) -->
-                        <li x-show="newUI && featureTabs" class="flex items-center gap-1 overflow-x-auto tab-scroll mr-2" style="max-width: 50%;">
-                            <template x-for="f in files" :key="f.name">
-                                <div class="flex items-center">
-                                    <!-- Rename Mode -->
-                                    <template x-if="renamingFile === f.name">
-                                        <input type="text" x-model="renameValue" 
-                                               @keydown.enter="finishRename()" 
-                                               @keydown.escape="cancelRename()"
-                                               @blur="finishRename()"
-                                               x-init="$nextTick(() => $el.focus())"
-                                               class="input input-xs input-bordered w-24 bg-gray-700 text-white text-xs" />
-                                    </template>
-                                    <!-- Normal Tab -->
-                                    <template x-if="renamingFile !== f.name">
-                                        <div class="join">
-                                            <button @click="switchFile(f.name)" 
-                                                    @dblclick="startRename(f.name)"
-                                                    :class="activeFile === f.name ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
-                                                    class="btn btn-xs join-item rounded-l-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap border-none pr-1">
-                                                <span x-text="f.name"></span>
-                                            </button>
-                                            <button x-show="files.length > 1" 
-                                                    @click="deleteFile(f.name)" 
-                                                    :class="activeFile === f.name ? 'bg-blue-600 text-white hover:bg-red-500' : 'bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white'"
-                                                    class="btn btn-xs join-item rounded-r-lg border-none px-1 h-6 min-h-6 opacity-70 hover:opacity-100"
-                                                    title="Delete file">&times;</button>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                            <!-- Add file button -->
-                            <button @click="createNewFile()" class="btn btn-xs btn-ghost text-gray-400 hover:text-white" title="New file">+</button>
-                        </li>
-
-                        <!-- Classic single-file tab (shown when tabs are off) -->
-                        <li x-show="!newUI || !featureTabs" class="items-center justify-center text-center">
-                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700" x-text="activeFile"></p>
-                        </li>
-
-                        <li class="flex items-center gap-2">
-                            <!-- Zen Mode Toggle -->
-                            <button @click="zenMode = !zenMode; setTimeout(() => { if(myCodeMirror) myCodeMirror.refresh(); }, 350)" 
-                                    class="btn btn-xs btn-outline btn-info text-white" 
-                                    :title="zenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'">
-                                <svg x-show="!zenMode" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                                <svg x-show="zenMode"  xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>
-                            </button>
-
-                            <button class="btn btn-xs btn-outline btn-neutral text-white" @click="loadcode();">
-                                <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/12067/12067091.png">Import
-                            </button>
-                            
-                            <div class="dropdown dropdown-end">
-                                <div tabindex="0" role="button" class="btn btn-xs btn-outline btn-neutral text-white m-0">
-                                    <img class="w-4 h-4 p-0 invert" src="https://cdn-icons-png.flaticon.com/512/15221/15221871.png">Export
-                                </div>
-                                <ul tabindex="0" class="dropdown-content z-[200] menu p-1 shadow bg-gray-800 rounded-box w-44 text-white border border-gray-700 mt-1 space-y-1">
-                                    <li><a @mousedown.prevent="savecode(); document.activeElement.blur();" class="text-xs p-2.5 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Export File (.py)</a></li>
-                                    <li><a @mousedown.prevent="exportProject(); document.activeElement.blur();" class="text-xs p-2.5 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Export Project (.nu)</a></li>
-                                </ul>
-                            </div>
-                            <button @click="startRepl()" class="btn btn-xs btn-outline btn-success" :class="inRepl ? 'btn-active bg-green-900 border-none' : ''">Start REPL</button>
-                            <template x-if="!running">
-                                <button class="btn btn-xs btn-primary" id="runbutton" onclick="runcode();">Run</button>
-                            </template>
-                            <template x-if="running">
-                                <button class="btn btn-xs btn-error" id="stopbutton" onclick="stopcode();">Stop</button>
-                            </template>
-                        </li>
-                    </ol>
-                </div>
-                <div id="editor" style="background-color: #1C2130;"></div>
-            </div>
-        
-            <div id="divider" :class="{'hidden': zenMode}" class="pane-divider"></div>
-        
-            <!-- RIGHT PANE: Output -->
-            <div id="output" x-show="!zenMode" class="w-1/2 h-full pane">
-                <div class="border-t-3 border-b-2 border-gray-700" style="background-color: var(--menu);" id="toolbar-right">
-                    <ol class="flex flex-row p-2 items-center justify-between">
-                        <li class="items-center justify-center text-center">
-                            <p class="flex text-lg w-20 h-8 items-center justify-center text-white rounded-lg bg-gray-700">Output</p>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <!-- Packages button (feature-gated) -->
-                            <template x-if="newUI && featurePackages">
-                                <button @click="openPackages()" class="btn btn-xs btn-outline btn-accent text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                    Packages
-                                </button>
-                            </template>
-                            <button class="btn btn-xs btn-outline btn-neutral text-white" onclick="term.clear();">Clear</button>
-                        </li>
-                    </ol>
-                </div>
-                <div id="terminal"></div>
-            </div>
-        </main>
-
-        <!-- ============ SETTINGS MODAL ============ -->
-        <div x-show="settingsOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
-            <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/80" @click.away="settingsOpen = false">
-                <div class="p-6 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
-                    <h2 class="text-2xl font-bold text-white">Settings</h2>
-                    <button @click="settingsOpen = false" class="btn btn-circle btn-ghost btn-sm text-gray-400 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="p-6 space-y-8">
-
-                    <!-- Features Section -->
-                    <section>
-                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Features</h3>
-                        <div class="space-y-3">
-                            <!-- New UI master toggle -->
-                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl">
-                                <div>
-                                    <p class="text-white font-medium">New UI</p>
-                                    <p class="text-gray-500 text-xs">DaisyUI-styled buttons and components</p>
-                                </div>
-                                <input type="checkbox" class="toggle toggle-primary" :checked="newUI" @change="toggleNewUI()" />
-                            </div>
-                            <!-- Tabbed Editor -->
-                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
-                                <div>
-                                    <p class="text-white font-medium">Tabbed Editor</p>
-                                    <p class="text-gray-500 text-xs">Multi-file editing with tabs</p>
-                                </div>
-                                <input type="checkbox" class="toggle toggle-primary" :checked="featureTabs" @change="toggleFeatureTabs()" :disabled="!newUI" />
-                            </div>
-                            <!-- Package Manager -->
-                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
-                                <div>
-                                    <p class="text-white font-medium">Package Manager</p>
-                                    <p class="text-gray-500 text-xs">Install Python packages via micropip</p>
-                                </div>
-                                <input type="checkbox" class="toggle toggle-primary" :checked="featurePackages" @change="toggleFeaturePackages()" :disabled="!newUI" />
-                            </div>
-                            <!-- Toast Notifications -->
-                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-xl" :class="{ 'opacity-40 pointer-events-none': !newUI }">
-                                <div>
-                                    <p class="text-white font-medium">Toast Notifications</p>
-                                    <p class="text-gray-500 text-xs">Non-blocking toasts instead of alert popups</p>
-                                </div>
-                                <input type="checkbox" class="toggle toggle-primary" :checked="featureToasts" @change="toggleFeatureToasts()" :disabled="!newUI" />
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Themes Section -->
-                    <section>
-                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Themes</h3>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            <template x-for="t in themes" :key="t.id">
-                                <div @click="setTheme(t.id)" 
-                                     :class="theme === t.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-800 hover:border-gray-500'"
-                                     class="cursor-pointer border-2 rounded-xl p-3 transition-all flex flex-col items-center">
-                                    
-                                    <!-- Code Preview Panel -->
-                                    <div :style="`background: ${t.bg}; color: ${t.fg}`" 
-                                         class="h-24 w-full rounded-md mb-2 shadow-inner overflow-hidden text-left p-3 text-[10px] sm:text-xs font-mono select-none flex flex-col justify-center">
-                                        <div><span :style="`color: ${t.keyword}`">def</span> <span :style="`color: ${t.func}`">hello_world</span>():</div>
-                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span :style="`color: ${t.keyword}`">print</span>(<span :style="`color: ${t.string}`">"Hello"</span>)</div>
-                                    </div>
-
-                                    <span class="text-sm font-medium text-white block text-center mt-1" x-text="t.name"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </section>
-
-                    <!-- Editor Preferences -->
-                    <section>
-                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Editor</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Font Size -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Font Size</label>
-                                <div class="flex items-center gap-4">
-                                    <input type="range" min="10" max="30" x-model="fontSize" @input="updateFontSize()" class="range range-primary range-xs flex-1">
-                                    <span class="text-white w-10 text-center text-sm badge badge-neutral" x-text="fontSize + 'px'"></span>
-                                </div>
-                            </div>
-                            <!-- Line Numbers -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Line Numbers</label>
-                                <input type="checkbox" class="toggle toggle-primary" :checked="lineNumbers" @change="toggleLineNumbers()" />
-                            </div>
-                            <!-- Keybindings -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Keybindings</label>
-                                <select class="select select-bordered select-sm bg-gray-800 text-white w-full" x-model="keybindings" @change="setKeybindings(keybindings)">
-                                    <option value="default">Default</option>
-                                    <option value="vim">Vim</option>
-                                    <option value="emacs">Emacs</option>
-                                </select>
-                            </div>
-                            <!-- Word Wrap -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Word Wrap</label>
-                                <input type="checkbox" class="toggle toggle-primary" x-model="lineWrapping" @change="toggleLineWrap()" />
-                            </div>
-                            <!-- Code Folding -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Code Folding</label>
-                                <input type="checkbox" class="toggle toggle-primary" x-model="codeFolding" @change="toggleCodeFolding()" />
-                            </div>
-                            <!-- Bracket Mastery -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Bracket Mastery</label>
-                                <input type="checkbox" class="toggle toggle-primary" x-model="bracketMastery" @change="toggleBracketMastery()" />
-                            </div>
-                            <!-- Active Line Highlighting -->
-                            <div>
-                                <label class="text-sm text-gray-400 mb-2 block">Active Line Highlight</label>
-                                <input type="checkbox" class="toggle toggle-primary" x-model="activeLineHighlight" @change="toggleActiveLine()" />
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- System Maintenance -->
-                    <section>
-                        <h3 class="text-lg font-semibold text-gray-300 mb-4">System Maintenance</h3>
-                        <div class="flex flex-wrap gap-3">
-                            <button x-show="canInstall" @click="installPWA(); settingsOpen = false;" class="btn btn-sm btn-outline btn-success shadow-lg" x-cloak>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                Install App
-                            </button>
-                            <button @click="clearCodeCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Code Cache</button>
-                            <button @click="clearSiteCache()" class="btn btn-sm btn-outline btn-neutral text-gray-300">Clear Site Cache</button>
-                            <button @click="resetToDefaults()" class="btn btn-sm btn-outline btn-error text-red-200">Reset All to Defaults</button>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ PACKAGES MODAL ============ -->
-        <div x-show="packagesOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak x-transition>
-            <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl shadow-black/80" @click.away="packagesOpen = false">
-                <div class="p-5 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-gray-900 z-10">
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                        Package Manager
-                    </h2>
-                    <button @click="packagesOpen = false" class="btn btn-circle btn-ghost btn-sm text-gray-400 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="p-5 space-y-4">
-                    <!-- Install input -->
-                    <div class="flex gap-2">
-                        <input type="text" x-model="packageName" 
-                               @keydown.enter="installPackage()" 
-                               placeholder="Package name (e.g. requests)" 
-                               class="input input-bordered input-sm flex-1 bg-gray-800 text-white placeholder-gray-500" />
-                        <button @click="installPackage()" class="btn btn-sm btn-primary" :disabled="installingPackage || !packageName.trim()">
-                            <template x-if="installingPackage">
-                                <span class="loading loading-spinner loading-xs"></span>
-                            </template>
-                            <template x-if="!installingPackage">
-                                <span>Install</span>
-                            </template>
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-500">Uses micropip — works with pure-Python PyPI packages.</p>
-
-                    <!-- Installed packages list -->
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-400 mb-2">Installed Packages</h4>
-                        <div class="max-h-48 overflow-y-auto space-y-1">
-                            <template x-if="installedPackages.length === 0">
-                                <p class="text-gray-600 text-sm italic">Loading packages...</p>
-                            </template>
-                            <template x-for="pkg in installedPackages" :key="pkg">
-                                <div class="flex items-center justify-between px-3 py-1.5 bg-gray-800 rounded-lg text-sm">
-                                    <span class="text-gray-300 font-mono text-xs" x-text="pkg"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ============ COLLISION MODAL ============ -->
-        <dialog id="project_collision_modal" class="modal modal-bottom sm:modal-middle">
-            <div class="modal-box bg-gray-900 border border-gray-700">
-                <h3 class="font-bold text-lg text-white" x-text="'Project \''+collisionProjectName+'\' already exists'"></h3>
-                <p class="py-4 text-gray-400">A project with this name already exists in your workspace. Do you want to overwrite it, or import it as a new copy with a different name?</p>
-                <div class="modal-action">
-                    <form method="dialog" class="flex gap-2 w-full justify-between items-center">
+                <!-- Editor Preferences -->
+                <section>
+                    <h3 class="text-lg font-semibold mb-4" style="color: var(--fg); opacity: 0.8;">Editor</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Font Size -->
                         <div>
-                            <input type="text" x-model="renameProjectInput" class="input input-sm input-bordered bg-gray-800 text-white border-gray-600" placeholder="New name" />
-                            <button @click="resolveCollision('rename')" class="btn btn-sm btn-info ml-2">Rename Copy</button>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Font Size</label>
+                            <div class="flex items-center gap-4">
+                                <input type="range" min="10" max="30" x-model="fontSize" @input="updateFontSize()"
+                                    class="range range-primary range-xs flex-1">
+                                <span class="w-10 text-center text-sm badge badge-neutral" style="background-color: rgba(148, 163, 184, 0.2); color: var(--fg);"
+                                    x-text="fontSize + 'px'"></span>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button @click="resolveCollision('cancel')" class="btn btn-sm btn-ghost text-gray-400">Cancel</button>
-                            <button @click="resolveCollision('overwrite')" class="btn btn-sm btn-error">Overwrite</button>
+                        <!-- Line Numbers -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Line Numbers</label>
+                            <input type="checkbox" class="toggle toggle-primary" :checked="lineNumbers"
+                                @change="toggleLineNumbers()" />
                         </div>
-                    </form>
+                        <!-- Keybindings -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Keybindings</label>
+                            <select class="select select-bordered select-sm w-full"
+                                style="background-color: var(--bg); color: var(--fg);"
+                                x-model="keybindings" @change="setKeybindings(keybindings)">
+                                <option value="default">Default</option>
+                                <option value="vim">Vim</option>
+                                <option value="emacs">Emacs</option>
+                            </select>
+                        </div>
+                        <!-- Word Wrap -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Word Wrap</label>
+                            <input type="checkbox" class="toggle toggle-primary" x-model="lineWrapping"
+                                @change="toggleLineWrap()" />
+                        </div>
+                        <!-- Code Folding -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Code Folding</label>
+                            <input type="checkbox" class="toggle toggle-primary" x-model="codeFolding"
+                                @change="toggleCodeFolding()" />
+                        </div>
+                        <!-- Bracket Mastery -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Bracket Mastery</label>
+                            <input type="checkbox" class="toggle toggle-primary" x-model="bracketMastery"
+                                @change="toggleBracketMastery()" />
+                        </div>
+                        <!-- Active Line Highlighting -->
+                        <div>
+                            <label class="text-sm mb-2 block" style="color: var(--fg); opacity: 0.6;">Active Line Highlight</label>
+                            <input type="checkbox" class="toggle toggle-primary" x-model="activeLineHighlight"
+                                @change="toggleActiveLine()" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- System Maintenance -->
+                <section>
+                    <h3 class="text-lg font-semibold mb-4" style="color: var(--fg); opacity: 0.8;">System Maintenance</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <button x-show="canInstall" @click="installPWA(); settingsOpen = false;"
+                            class="btn btn-sm btn-outline btn-success shadow-lg" x-cloak>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 inline" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Install App
+                        </button>
+                        <button @click="clearCodeCache()" class="btn btn-sm btn-theme">Clear
+                            Code Cache</button>
+                        <button @click="clearSiteCache()" class="btn btn-sm btn-theme">Clear
+                            Site Cache</button>
+                        <button @click="resetToDefaults()" class="btn btn-sm btn-outline btn-error text-red-200">Reset
+                            All to Defaults</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PACKAGES MODAL ============ -->
+    <div x-show="packagesOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak
+        x-transition>
+        <div style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
+            class="border rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl shadow-black/80"
+            @click.away="packagesOpen = false">
+            <div style="border-color: rgba(148, 163, 184, 0.1);" class="p-5 border-b flex justify-between items-center sticky top-0 z-10">
+                <h2 class="text-xl font-bold flex items-center gap-2" style="color: var(--fg);">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Package Manager
+                </h2>
+                <button @click="packagesOpen = false"
+                    class="btn btn-circle btn-ghost btn-sm" style="color: var(--fg);">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <!-- Install input -->
+                <div class="flex gap-2">
+                    <input type="text" x-model="packageName" @keydown.enter="installPackage()"
+                        placeholder="Package name (e.g. requests)"
+                        style="background-color: var(--bg); color: var(--fg);"
+                        class="input input-bordered input-sm flex-1 placeholder-gray-500" />
+                    <button @click="installPackage()" class="btn btn-sm btn-primary"
+                        :disabled="installingPackage || !packageName.trim()">
+                        <template x-if="installingPackage">
+                            <span class="loading loading-spinner loading-xs"></span>
+                        </template>
+                        <template x-if="!installingPackage">
+                            <span>Install</span>
+                        </template>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500">Uses micropip — works with pure-Python PyPI packages.</p>
+
+                <!-- Installed packages list -->
+                <div>
+                    <h4 class="text-sm font-semibold mb-2" style="color: var(--fg); opacity: 0.6;">Installed Packages</h4>
+                    <div class="max-h-48 overflow-y-auto space-y-1">
+                        <template x-if="installedPackages.length === 0">
+                            <p class="text-gray-600 text-sm italic">Loading packages...</p>
+                        </template>
+                        <template x-for="pkg in installedPackages" :key="pkg">
+                            <div class="flex items-center justify-between px-3 py-1.5 rounded-lg text-sm" style="background-color: var(--bg); color: var(--fg);">
+                                <span class="font-mono text-xs" style="color: var(--fg);" x-text="pkg"></span>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
-            <form method="dialog" class="modal-backdrop">
-                <button @click="resolveCollision('cancel')">close</button>
-            </form>
-        </dialog>
+        </div>
+    </div>
+    <!-- ============ COLLISION MODAL ============ -->
+    <dialog id="project_collision_modal" class="modal modal-bottom sm:modal-middle">
+        <div style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);" class="modal-box border">
+            <h3 class="font-bold text-lg" style="color: var(--fg);" x-text="'Project \''+collisionProjectName+'\' already exists'">
+            </h3>
+            <p class="py-4" style="color: var(--fg); opacity: 0.7;">A project with this name already exists in your workspace. Do you want to
+                overwrite it, or import it as a new copy with a different name?</p>
+            <div class="modal-action">
+                <form method="dialog" class="flex gap-2 w-full justify-between items-center">
+                    <div>
+                        <input type="text" x-model="renameProjectInput"
+                            style="background-color: var(--bg); color: var(--fg);"
+                            class="input input-sm input-bordered"
+                            placeholder="New name" />
+                        <button @click="resolveCollision('rename')" class="btn btn-sm btn-info ml-2">Rename
+                            Copy</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="resolveCollision('cancel')"
+                            class="btn btn-sm btn-ghost" style="color: var(--fg);">Cancel</button>
+                        <button @click="resolveCollision('overwrite')" class="btn btn-sm btn-error">Overwrite</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button @click="resolveCollision('cancel')">close</button>
+        </form>
+    </dialog>
 
-    </body>
+</body>
+
 </html>
-```

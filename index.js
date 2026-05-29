@@ -181,6 +181,9 @@ document.addEventListener('alpine:init', () => {
         projectActionSubmitText: '',
         projectActionCallback: null,
         projectActionInput: '',
+        collisionProjectName: '',
+        renameProjectInput: '',
+        collisionTempData: null,
 
         // File system
         files: [],
@@ -194,6 +197,8 @@ document.addEventListener('alpine:init', () => {
             { id: 'nord-dark', name: 'Nord Dark', bg: '#2e3440', fg: '#eceff4', keyword: '#81a1c1', func: '#88c0d0', string: '#a3be8c' },
             { id: 'nord-light', name: 'Nord Light', bg: '#e5e9f0', fg: '#2e3440', keyword: '#5e81ac', func: '#81a1c1', string: '#a3be8c' },
             { id: 'dark-red', name: 'Dark Red', bg: '#1a0f0f', fg: '#ff9999', keyword: '#ef4444', func: '#fca5a5', string: '#f87171' },
+            { id: 'light-red', name: 'Light Red', bg: '#fff5f5', fg: '#991b1b', keyword: '#ef4444', func: '#991b1b', string: '#c2410c' },
+            { id: 'amoled', name: 'AMOLED Black', bg: '#000000', fg: '#ffffff', keyword: '#ff007f', func: '#00ffff', string: '#00ff00' },
             { id: 'dracula', name: 'Dracula', bg: '#282a36', fg: '#f8f8f2', keyword: '#ff79c6', func: '#50fa7b', string: '#f1fa8c' },
             { id: 'material', name: 'Material', bg: '#263238', fg: '#eeffff', keyword: '#c792ea', func: '#82aaff', string: '#c3e88d' },
             { id: 'monokai', name: 'Monokai', bg: '#272822', fg: '#f8f8f2', keyword: '#f92672', func: '#a6e22e', string: '#e6db74' },
@@ -596,6 +601,10 @@ document.addEventListener('alpine:init', () => {
             document.documentElement.style.setProperty('--fg', t.fg);
             document.documentElement.style.setProperty('--menu', t.menu);
             document.documentElement.style.setProperty('--hil', t.accent);
+
+            // Set icon invert filter dynamically based on text brightness
+            const isDark = !['light', 'nord-light', 'light-red', 'solarized-light', 'idea', 'github-light'].includes(this.theme);
+            document.documentElement.style.setProperty('--icon-filter', isDark ? 'invert(1)' : 'none');
 
             if (globalThis.myCodeMirror) {
                 globalThis.myCodeMirror.setOption('theme', t.cm);
