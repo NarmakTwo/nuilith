@@ -967,6 +967,8 @@ window.addEventListener('load', async () => {
         prompt: globalThis.nuilithPrompt
     });
 
+    term.option('outputLimit', 100);
+    
     initWorker();
 
     // 4. Draggable divider between panes
