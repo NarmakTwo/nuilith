@@ -1,7 +1,7 @@
 <!-- For AI Agents, refer to .agents/agents.md for the bot protocol -->
 <div align="center">
-  <a href="https://nuilith.onrender.com/" target="_blank">
-    <img src="https://nuilith.onrender.com/assets/icon.png" alt="Python Logo" width="80" />
+  <a href="https://nuilith.pages.dev/" target="_blank">
+    <img src="https://nuilith.pages.dev/assets/icon.png" alt="Python Logo" width="80" />
   </a>
   
   <h1>Nuilith Python IDE</h1>
@@ -12,27 +12,27 @@
 
   <p>
     <a href="https://nuilith.pages.dev/" target="_blank">
-      <img src="https://img.shields.io/badge/View%20Live-nuilith.pages.dev-brightgreen?style=for-the-badge&logo=cloudflare" alt="Live Site on CFP" />
+      <img src="https://img.shields.io/badge/View%20Live-nuilith.pages.dev-brightgreen?style=for-the-badge&logo=cloudflare" alt="Live Site on Cloudflare Pages" />
     </a>
-    <a href="https://github.com/NarmakTwo/python-ide/stargazers">
-      <img src="https://img.shields.io/github/stars/NarmakTwo/python-ide?style=for-the-badge&logo=github" alt="GitHub Stars" />
+    <a href="https://github.com/NarmakTwo/nuilith/stargazers">
+      <img src="https://img.shields.io/github/stars/NarmakTwo/nuilith?style=for-the-badge&logo=github" alt="GitHub Stars" />
     </a>
   </p>
 
   <p>
-    <a href="https://vercel.com/new/clone?repository-url=https://github.com/NarmakTwo/python-ide" target="_blank">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/NarmakTwo/nuilith" target="_blank">
       <img src="https://vercel.com/button" alt="Deploy with Vercel" />
     </a>
-    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/NarmakTwo/python-ide" target="_blank">
+    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/NarmakTwo/nuilith" target="_blank">
       <img src="https://www.netlify.com/img/deploy/button.svg" alt="Deploy to Netlify" />
     </a>
-    <a href="https://render.com/deploy?repo=https://github.com/NarmakTwo/python-ide" target="_blank">
+    <a href="https://render.com/deploy?repo=https://github.com/NarmakTwo/nuilith" target="_blank">
       <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
     </a>
   </p>
 
   <p>
-    <a href="https://deepwiki.com/NarmakTwo/python-ide" target="_blank">
+    <a href="https://deepwiki.com/NarmakTwo/nuilith" target="_blank">
       <img src="https://img.shields.io/badge/deepwiki-documentation-blue" alt="Deepwiki Badge" />
     </a>
   </p>
@@ -95,8 +95,8 @@ Nuilith features a built-in virtual workspace system backed by the browser's `In
 Clone the repository and spin up a local web server to bypass CORS limitations:
 
 ```bash
-git clone https://github.com/NarmakTwo/python-ide
-cd python-ide
+git clone https://github.com/NarmakTwo/nuilith
+cd nuilith
 npx serve .
 ```
 

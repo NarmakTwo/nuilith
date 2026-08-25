@@ -1,8 +1,8 @@
 # Import/Export & the .nu Format
 Relevant source files
-- [demos/mandelbrot.nu](https://github.com/NarmakTwo/python-ide/blob/9fa46400/demos/mandelbrot.nu)
-- [index.js](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js)
-- [manifest.json](https://github.com/NarmakTwo/python-ide/blob/9fa46400/manifest.json)
+- [demos/mandelbrot.nu](https://github.com/NarmakTwo/nuilith/blob/9fa46400/demos/mandelbrot.nu)
+- [index.js](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js)
+- [manifest.json](https://github.com/NarmakTwo/nuilith/blob/9fa46400/manifest.json)
 
 This section documents the project serialization and portability layer of Nuilith. It covers the technical specifications of the `.nu` project bundle, the logic for handling file collisions during imports, and the integration with the Progressive Web App (PWA) File System Access API for native file handling.
 
@@ -18,7 +18,7 @@ A standard `.nu` bundle contains:
 2. **`manifest.json`**: A metadata file containing project-level settings.
 
 FieldTypeDescription`projectName`StringThe name of the project as it appears in the IDE.`lastModified`NumberUnix timestamp of the last save.`installedPackages`ArrayList of PyPI packages required by the project.
-**Sources:**[index.js1400-1430](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1400-L1430)[index.js1450-1470](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1450-L1470)
+**Sources:**[index.js1400-1430](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1400-L1430)[index.js1450-1470](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1450-L1470)
 
 ---
 
@@ -51,7 +51,7 @@ zip.generateAsync({type: 'blob'})
 Trigger Browser Download (.nu)
 ```
 
-**Sources:**[index.js1396-1433](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1396-L1433)
+**Sources:**[index.js1396-1433](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1396-L1433)
 
 ---
 
@@ -95,7 +95,7 @@ add(projectData)
 switchProject(newName)
 ```
 
-**Sources:**[index.js1435-1498](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1435-L1498)[index.js16-17](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L16-L17)
+**Sources:**[index.js1435-1498](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1435-L1498)[index.js16-17](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L16-L17)
 
 ---
 
@@ -119,7 +119,7 @@ The `manifest.json` defines the `file_handlers` array, mapping file extensions t
 ]
 ```
 
-**Sources:**[manifest.json26-34](https://github.com/NarmakTwo/python-ide/blob/9fa46400/manifest.json#L26-L34)
+**Sources:**[manifest.json26-34](https://github.com/NarmakTwo/nuilith/blob/9fa46400/manifest.json#L26-L34)
 
 ### Launch Queue Consumer
 
@@ -130,10 +130,10 @@ Upon initialization, `index.js` checks the `window.launchQueue`. If the app was 
 3. **File Reading**: The `getFile()` method is called on the handle to obtain a `File` object.
 4. **Route to Import**: The `File` object is passed directly to the `importProject` logic, treating it exactly like a manual upload.
 
-**Sources:**[index.js1500-1520](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1500-L1520)
+**Sources:**[index.js1500-1520](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1500-L1520)
 
 ---
 
 ## Technical Summary Table
-FeatureImplementation DetailCode Entity**Serialization**JSZip (v3.10.1)`JSZip`[index.js1401](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1401-L1401)**Project Storage**IndexedDB Store: `projects``PROJECTS_STORE`[index.js16](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L16-L16)**File Detection**PWA Launch Queue API`window.launchQueue`[index.js1500](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1500-L1500)**Extension**`.nu` (MIME: `application/zip`)`manifest.json:31]()**Package Sync**Metadata field `installedPackages``manifest.json`[index.js1406](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1406-L1406)
-**Sources:**[index.js16-17](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L16-L17)[index.js1400-1410](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1400-L1410)[index.js1500-1510](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L1500-L1510)[manifest.json26-34](https://github.com/NarmakTwo/python-ide/blob/9fa46400/manifest.json#L26-L34)
+FeatureImplementation DetailCode Entity**Serialization**JSZip (v3.10.1)`JSZip`[index.js1401](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1401-L1401)**Project Storage**IndexedDB Store: `projects``PROJECTS_STORE`[index.js16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L16-L16)**File Detection**PWA Launch Queue API`window.launchQueue`[index.js1500](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1500-L1500)**Extension**`.nu` (MIME: `application/zip`)`manifest.json:31]()**Package Sync**Metadata field `installedPackages``manifest.json`[index.js1406](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1406-L1406)
+**Sources:**[index.js16-17](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L16-L17)[index.js1400-1410](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1400-L1410)[index.js1500-1510](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1500-L1510)[manifest.json26-34](https://github.com/NarmakTwo/nuilith/blob/9fa46400/manifest.json#L26-L34)

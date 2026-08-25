@@ -1,4 +1,4 @@
-# NarmakTwo-python-ide-DeepWiki
+# NarmakTwo-nuilith-DeepWiki
 
 ## Content Index
 

@@ -5,7 +5,7 @@ First off, thank you for considering contributing to Nuilith! It's people like y
 ## How Can I Contribute?
 
 ### Reporting Bugs
-Before creating bug reports, please check the [existing issues](https://github.com/NarmakTwo/python-ide/issues) to see if the problem has already been reported.
+Before creating bug reports, please check the [existing issues](https://github.com/NarmakTwo/nuilith/issues) to see if the problem has already been reported.
 
 When you are creating a bug report, please include as many details as possible:
 * **Use a clear and descriptive title.**
@@ -14,7 +14,7 @@ When you are creating a bug report, please include as many details as possible:
 * **Include screenshots** if helpful.
 
 ### Suggesting Enhancements
-Enhancement suggestions are tracked as [GitHub issues](https://github.com/NarmakTwo/python-ide/issues).
+Enhancement suggestions are tracked as [GitHub issues](https://github.com/NarmakTwo/nuilith/issues).
 * **Use a clear and descriptive title.**
 * **Provide a step-by-step description of the suggested enhancement.**
 * **Explain why this enhancement would be useful** to most Nuilith users.
@@ -30,8 +30,8 @@ Nuilith is a static web application. You don't need a complex backend setup to g
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/NarmakTwo/python-ide
-   cd python-ide
+   git clone https://github.com/NarmakTwo/nuilith
+   cd nuilith
    ```
 
 2. **Run a local server:**

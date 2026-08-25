@@ -1,8 +1,8 @@
 # CodeMirror Editor Configuration
 Relevant source files
-- [index.html](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html)
-- [index.js](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js)
-- [programiz.css](https://github.com/NarmakTwo/python-ide/blob/9fa46400/programiz.css)
+- [index.html](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html)
+- [index.js](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js)
+- [programiz.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css)
 
 The Nuilith IDE utilizes **CodeMirror v5** as its primary text editing engine. The configuration is designed to provide a rich, IDE-like experience within the browser, featuring Python-specific syntax highlighting, advanced navigation through keymaps, and real-time code analysis via a web worker-based linting pipeline.
 
@@ -13,8 +13,8 @@ The editor is instantiated and attached to the `globalThis.myCodeMirror` variabl
 ### Core Configuration Object
 
 The editor is initialized with a configuration object that pulls initial values from the `ideState` Alpine.js data model, which in turn retrieves persisted settings from `localStorage`.
-PropertyDescriptionImplementation`mode`Set to `python` for language-specific parsing.[index.js316](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L316-L316)`theme`Defaults to `programiz` or the user-selected theme.[index.js317](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L317-L317)`lineNumbers`Toggles the left-hand line numbering gutter.[index.js318](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L318-L318)`indentUnit`Standardized to 4 spaces for Python.[index.js321](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L321-L321)`gutters`Defines containers for line numbers, folding, and linting.[index.js324](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L324-L324)
-**Sources:**[index.js315-333](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L315-L333)[index.html53-54](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L53-L54)
+PropertyDescriptionImplementation`mode`Set to `python` for language-specific parsing.[index.js316](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L316-L316)`theme`Defaults to `programiz` or the user-selected theme.[index.js317](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L317-L317)`lineNumbers`Toggles the left-hand line numbering gutter.[index.js318](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L318-L318)`indentUnit`Standardized to 4 spaces for Python.[index.js321](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L321-L321)`gutters`Defines containers for line numbers, folding, and linting.[index.js324](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L324-L324)
+**Sources:**[index.js315-333](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L315-L333)[index.html53-54](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L53-L54)
 
 ## Feature Implementation
 
@@ -22,27 +22,27 @@ PropertyDescriptionImplementation`mode`Set to `python` for language-specific par
 
 Nuilith supports alternative input modes by loading external CodeMirror keymap scripts. The `keybindings` property in `ideState` determines which keymap is active.
 
-- **Vim:** Loaded via `keymap/vim.js`[index.html93](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L93-L93)
-- **Emacs:** Loaded via `keymap/emacs.js`[index.html94](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L94-L94)
+- **Vim:** Loaded via `keymap/vim.js`[index.html93](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L93-L93)
+- **Emacs:** Loaded via `keymap/emacs.js`[index.html94](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L94-L94)
 - **Default:** Standard browser-based text editing.
 
 ### Bracket Mastery & Active Line
 
 The "Bracket Mastery" feature combines two CodeMirror addons:
 
-1. **Match Brackets:** Highlights the corresponding opening/closing bracket when the cursor is adjacent to one [index.html85](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L85-L85)
-2. **Auto-Close Brackets:** Automatically inserts a closing bracket/quote when the opening one is typed [index.html79](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L79-L79)
+1. **Match Brackets:** Highlights the corresponding opening/closing bracket when the cursor is adjacent to one [index.html85](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L85-L85)
+2. **Auto-Close Brackets:** Automatically inserts a closing bracket/quote when the opening one is typed [index.html79](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L79-L79)
 
-Active line highlighting is managed by the `active-line.js` addon [index.html86](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L86-L86) which applies a specific CSS class to the line containing the cursor for better visibility.
+Active line highlighting is managed by the `active-line.js` addon [index.html86](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L86-L86) which applies a specific CSS class to the line containing the cursor for better visibility.
 
 ### Code Folding
 
 Folding is implemented using the `foldgutter.js` addon. It supports:
 
-- **Indent Fold:** Folds blocks based on Python indentation levels [index.html83](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L83-L83)
-- **Brace Fold:** Folds blocks enclosed in curly or square brackets [index.html84](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L84-L84)
+- **Indent Fold:** Folds blocks based on Python indentation levels [index.html83](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L83-L83)
+- **Brace Fold:** Folds blocks enclosed in curly or square brackets [index.html84](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L84-L84)
 
-**Sources:**[index.js327-331](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L327-L331)[index.html79-86](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.html#L79-L86)
+**Sources:**[index.js327-331](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L327-L331)[index.html79-86](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L79-L86)
 
 ## Live Linting Pipeline
 
@@ -52,11 +52,11 @@ Nuilith implements asynchronous linting using **Pyflakes**. Because the linting 
 
 The linting process follows a request-response cycle between the Main Thread and the `worker.js`.
 
-1. **Registration:** A custom lint helper is registered via `CodeMirror.registerHelper("lint", "python", pythonLint)`[index.js132](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L132-L132)
+1. **Registration:** A custom lint helper is registered via `CodeMirror.registerHelper("lint", "python", pythonLint)`[index.js132](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L132-L132)
 2. **Trigger:** As the user types, CodeMirror calls `pythonLint`.
-3. **Dispatch:**`pythonLint` generates a `lintRequestId`, stores a callback in `pendingLintCallback`, and sends a `LINT` message to the worker [index.js125-129](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L125-L129)
+3. **Dispatch:**`pythonLint` generates a `lintRequestId`, stores a callback in `pendingLintCallback`, and sends a `LINT` message to the worker [index.js125-129](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L125-L129)
 4. **Processing:** The worker executes Pyflakes and returns a `LINT_RESULT` message.
-5. **Rendering:** The `pythonWorker.onmessage` handler identifies the matching request ID and executes the callback to render markers in the editor gutter [index.js68-71](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L68-L71)
+5. **Rendering:** The `pythonWorker.onmessage` handler identifies the matching request ID and executes the callback to render markers in the editor gutter [index.js68-71](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L68-L71)
 
 **Editor-to-Worker Linting Flow**
 
@@ -77,7 +77,7 @@ postMessage({type: "LINT_RESULT", id, annotations})
 callback(annotations)
 ```
 
-**Sources:**[index.js123-132](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L123-L132)[index.js68-71](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L68-L71)
+**Sources:**[index.js123-132](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L123-L132)[index.js68-71](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L68-L71)
 
 ## Theme: Programiz
 
@@ -125,7 +125,7 @@ myCodeMirror.setOption('keyMap', ...)
 myCodeMirror.setOption('lineWrapping', ...)
 ```
 
-**Sources:**[programiz.css1-127](https://github.com/NarmakTwo/python-ide/blob/9fa46400/programiz.css#L1-L127)[index.js157-164](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L157-L164)[index.js401-445](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L401-L445)
+**Sources:**[programiz.css1-127](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L1-L127)[index.js157-164](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L157-L164)[index.js401-445](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L401-L445)
 
 ## Auto-Save and Persistence
 
@@ -135,4 +135,4 @@ The editor state is persisted every 30 seconds if changes are detected. This log
 2. **Action:** If 30 seconds have passed, it calls `saveFile(activeFile, myCodeMirror.getValue())`.
 3. **Storage:** The content is written to the `projects` object store in IndexedDB (`nuilithdb`).
 
-**Sources:**[index.js8](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L8-L8)[index.js14-16](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L14-L16)[index.js335-341](https://github.com/NarmakTwo/python-ide/blob/9fa46400/index.js#L335-L341)
+**Sources:**[index.js8](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L8-L8)[index.js14-16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L14-L16)[index.js335-341](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L335-L341)
