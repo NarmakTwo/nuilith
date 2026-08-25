@@ -4,6 +4,8 @@
  * CodeMirror editor, and communication with the Web Worker.
  */
 
+import Alpine from 'alpinejs';
+
 let pythonWorker = null;
 globalThis.term = null;
 globalThis.myCodeMirror = null;
@@ -55,6 +57,7 @@ function showToast(message, type = 'info') {
 function initWorker() {
     if (pythonWorker) pythonWorker.terminate();
     pythonWorker = new Worker('worker.js');
+    globalThis.pythonWorker = pythonWorker;
     pythonWorker.onmessage = (event) => {
         const { type, text, annotations } = event.data;
         if (type === "READY") {
@@ -913,6 +916,9 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
+window.Alpine = Alpine;
+Alpine.start();
+
 // ===== Window Load =====
 window.addEventListener('load', async () => {
     // 1. Service Worker Registration
@@ -1079,6 +1085,7 @@ function runcode() {
     if (window.ideStateData) window.ideStateData.running = true;
     pythonWorker.postMessage({ type: "RUN", code: myCodeMirror.getValue() });
 }
+window.runcode = runcode;
 
 function stopcode() {
     initWorker();
@@ -1086,6 +1093,7 @@ function stopcode() {
     term.set_prompt(globalThis.nuilithPrompt);
     term.echo('[[b;red;]Execution terminated.]');
 }
+window.stopcode = stopcode;
 
 function setupTimers() {
     setInterval(() => {

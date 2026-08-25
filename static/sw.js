@@ -4,16 +4,15 @@
  * This is the core networking layer of the application.
  */
 
-const CACHE_NAME = 'nuilith-cache-v10';
+const CACHE_NAME = 'nuilith-cache-v12';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [
     './',
     './index.html',
     './index.js',
+    './index.css',
     './worker.js',
-    './style.css',
-    './programiz.css',
     './manifest.json',
     './coi-serviceworker.min.js',
     './assets/icon.png'
@@ -69,9 +68,6 @@ const CDN_ASSETS = [
     'https://unpkg.com/codemirror@5.65.21/keymap/vim.js',
     'https://unpkg.com/codemirror@5.65.21/keymap/emacs.js',
 
-    // Alpine.js
-    'https://unpkg.com/alpinejs',
-    
     // JSZip
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
 
