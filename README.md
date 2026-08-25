@@ -11,8 +11,8 @@
   </p>
 
   <p>
-    <a href="https://nuilith.onrender.com/" target="_blank">
-      <img src="https://img.shields.io/badge/View%20Live-nuilith.onrender.com-brightgreen?style=for-the-badge&logo=render" alt="Live Site on Render" />
+    <a href="https://nuilith.pages.dev/" target="_blank">
+      <img src="https://img.shields.io/badge/View%20Live-nuilith.pages.dev-brightgreen?style=for-the-badge&logo=cloudflare" alt="Live Site on CFP" />
     </a>
     <a href="https://github.com/NarmakTwo/python-ide/stargazers">
       <img src="https://img.shields.io/github/stars/NarmakTwo/python-ide?style=for-the-badge&logo=github" alt="GitHub Stars" />
