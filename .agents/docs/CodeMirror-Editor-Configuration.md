@@ -2,7 +2,7 @@
 Relevant source files
 - [index.html](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html)
 - [index.js](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js)
-- [programiz.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css)
+- [programiz-inspired.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css)
 
 The Nuilith IDE utilizes **CodeMirror v5** as its primary text editing engine. The configuration is designed to provide a rich, IDE-like experience within the browser, featuring Python-specific syntax highlighting, advanced navigation through keymaps, and real-time code analysis via a web worker-based linting pipeline.
 
@@ -81,7 +81,7 @@ callback(annotations)
 
 ## Theme: Programiz
 
-The default `programiz` theme is a custom-built CSS skin designed to mimic high-end Python IDEs. It is defined in `programiz.css` and targets specific CodeMirror token classes.
+The default `programiz` theme is a custom-built CSS skin designed to mimic high-end Python IDEs. It is defined in `programiz-inspired.css` and targets specific CodeMirror token classes.
 
 ### Syntax Highlighting Classes
 
@@ -125,7 +125,7 @@ myCodeMirror.setOption('keyMap', ...)
 myCodeMirror.setOption('lineWrapping', ...)
 ```
 
-**Sources:**[programiz.css1-127](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L1-L127)[index.js157-164](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L157-L164)[index.js401-445](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L401-L445)
+**Sources:**[programiz-inspired.css1-127](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L1-L127)[index.js157-164](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L157-L164)[index.js401-445](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L401-L445)
 
 ## Auto-Save and Persistence
 

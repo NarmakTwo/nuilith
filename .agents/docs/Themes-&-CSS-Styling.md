@@ -1,7 +1,7 @@
 # Themes & CSS Styling
 Relevant source files
 - [index.html](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html)
-- [programiz.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css)
+- [programiz-inspired.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css)
 - [style.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/style.css)
 
 This page documents the Nuilith visual engine, including the theme synchronization between the UI and CodeMirror, the flexible glassmorphism layout, and custom component implementations designed to bypass framework limitations.
@@ -104,17 +104,17 @@ The font-size and auto-save interval sliders use a custom `-webkit-slider-thumb`
 
 ## Programiz CodeMirror Theme
 
-While Nuilith supports standard CodeMirror themes (Nord, Dracula, Monokai), it defaults to a custom `programiz` theme defined in `programiz.css`.
+While Nuilith supports standard CodeMirror themes (Nord, Dracula, Monokai), it defaults to a custom `programiz` theme defined in `programiz-inspired.css`.
 
 ### Visual Characteristics
 
-- **Background:**`#1C2130` (Deep Navy) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L2-L2" min=2  file-path="programiz.css">Hii</FileRef>`.
-- **Typography:** Uses 'Fira Code' with a fallback to standard monospaced fonts `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L4-L4" min=4  file-path="programiz.css">Hii</FileRef>`.
+- **Background:**`#1C2130` (Deep Navy) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L2-L2" min=2  file-path="programiz-inspired.css">Hii</FileRef>`.
+- **Typography:** Uses 'Fira Code' with a fallback to standard monospaced fonts `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L4-L4" min=4  file-path="programiz-inspired.css">Hii</FileRef>`.
 - **Syntax Highlighting:**
-- `cm-keyword`: `#CDA869` (Gold/Tan) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L43-L45" min=43 max=45 file-path="programiz.css">Hii</FileRef>`.
-- `cm-builtin`: `#dcdcaa` (Light Yellow) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L53-L55" min=53 max=55 file-path="programiz.css">Hii</FileRef>`.
-- `cm-string`: `#8F9D6A` (Sage Green) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L58-L60" min=58 max=60 file-path="programiz.css">Hii</FileRef>`.
-- `cm-comment`: `#57a64a` (Grass Green) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L72-L75" min=72 max=75 file-path="programiz.css">Hii</FileRef>`.
+- `cm-keyword`: `#CDA869` (Gold/Tan) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L43-L45" min=43 max=45 file-path="programiz-inspired.css">Hii</FileRef>`.
+- `cm-builtin`: `#dcdcaa` (Light Yellow) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L53-L55" min=53 max=55 file-path="programiz-inspired.css">Hii</FileRef>`.
+- `cm-string`: `#8F9D6A` (Sage Green) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L58-L60" min=58 max=60 file-path="programiz-inspired.css">Hii</FileRef>`.
+- `cm-comment`: `#57a64a` (Grass Green) `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L72-L75" min=72 max=75 file-path="programiz-inspired.css">Hii</FileRef>`.
 
 ### Implementation Logic
 
@@ -138,4 +138,4 @@ editor.setOption('theme', 'programiz')
 Apply .cm-s-programiz styles
 ```
 
-**Sources:**`<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz.css#L1-L136" min=1 max=136 file-path="programiz.css">Hii</FileRef>`, `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L146-L168" min=146 max=168 file-path="index.js">Hii</FileRef>`
+**Sources:**`<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css#L1-L136" min=1 max=136 file-path="programiz-inspired.css">Hii</FileRef>`, `<FileRef file-url="https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L146-L168" min=146 max=168 file-path="index.js">Hii</FileRef>`
