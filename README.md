@@ -1,7 +1,7 @@
 <!-- For AI Agents, refer to .agents/agents.md for the bot protocol -->
 <div align="center">
   <a href="https://nuilith.pages.dev/" target="_blank">
-    <img src="https://nuilith.pages.dev/assets/icon.png" alt="Python Logo" width="80" />
+    <img src="https://nuilith.pages.dev/static/assets/icon.png" alt="Python Logo" width="80" />
   </a>
   
   <h1>Nuilith Python IDE</h1>
@@ -40,11 +40,11 @@
 
 ---
 
-![Screenshot of Nuilith](/assets/nuilith.png)
+![Screenshot of Nuilith](/static/assets/nuilith.png)
 
 ---
 
-Nuilith is a static, browser-based Python development environment. It leverages [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly) to execute Python code entirely on the client side without a backend. Once the initial assets (Pyodide and Pyflakes) are fetched and cached by a Service Worker, the IDE is fully functional offline.
+Nuilith is a static, browser-based Python development environment. It uses [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly) to execute Python code entirely on the client side without a backend. Once the initial assets (Pyodide and Pyflakes) are fetched and cached by a Service Worker, the IDE is fully functional offline.
 
 ## Core Architecture
 
