@@ -79,7 +79,7 @@ Nuilith features a built-in virtual workspace system backed by the browser's `In
 
 - **Persistent Projects Directory**: The `projects` object store tracks metadata for separate workspaces. Each workspace acts as an independent array of virtual `.py` files, active states, and specific `micropip` dependencies.
 - **Auto-save Protocol**: The Main Thread captures CodeMirror buffer mutations every 30 seconds (or immediately on execution) and continuously commits the differential state to IndexedDB.
-- **Import/Export System (`.nu` Format)**: Entire workspaces can be exported as zipped `.nu` archives via JSZip. This bundles the in-memory Python scripts alongside a `manifest.json` indicating the required PyPI packages for the project wrapper, allowing full environment restoration upon import.
+- **Import/Export System**: Entire workspaces can be exported as `.nu` or `.zip` archives via JSZip. Both include the Python sources and a manifest (`packages` plus `entryScript`). `.nu` keeps `manifest.json` at the archive root. `.zip` stores it at `.nuilith/manifest.json`.
 
 </details>
 

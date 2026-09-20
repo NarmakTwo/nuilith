@@ -4,7 +4,7 @@
  * This is the core networking layer of the application.
  */
 
-const CACHE_NAME = 'nuilith-cache-v12';
+const CACHE_NAME = 'nuilith-cache-v13';
 
 // --- Local assets ---
 const LOCAL_ASSETS = [
@@ -158,6 +158,14 @@ self.addEventListener('fetch', (event) => {
                 });
             })
         );
+        return;
+    }
+
+    // Trystero torrent signaling and TURN must not be cached or rewritten.
+    // Non-GET (tracker announces) also bypass the SW entirely.
+    if (event.request.method !== 'GET') return;
+    const href = url.href;
+    if (/tracker|announce|webtorrent|bittorrent|wss:\/\/|expressturn|coturn/i.test(href)) {
         return;
     }
 

@@ -17,21 +17,22 @@ A standard `.nu` bundle contains:
 1. **Project Files**: All files belonging to the project (e.g., `main.py`, `utils.py`) stored at the root of the ZIP.
 2. **`manifest.json`**: A metadata file containing project-level settings.
 
-FieldTypeDescription`projectName`StringThe name of the project as it appears in the IDE.`lastModified`NumberUnix timestamp of the last save.`installedPackages`ArrayList of PyPI packages required by the project.
-**Sources:**[index.js1400-1430](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1400-L1430)[index.js1450-1470](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L1450-L1470)
+FieldTypeDescription`packages`ArrayList of PyPI packages required by the project.`entryScript`String or nullFilename the Run button executes. `null` or omitted means Run uses the currently open file.
+
+A `.zip` export is the same archive except `manifest.json` lives at `.nuilith/manifest.json` instead of the zip root. Import accepts both `.nu` and `.zip` and reads whichever manifest path is present (`.nuilith/manifest.json` wins if both exist). After import, `switchProject` restores declared `packages` into the worker the same way Run and READY do.
 
 ---
 
 ## Export Pipeline
 
-The export process serializes the current state of the IDE's virtual file system (IndexedDB) into a downloadable blob. This is handled by the `exportProject()` function within the `ideState` Alpine.js object.
+The export process serializes the current state of the IDE's virtual file system (IndexedDB) into a downloadable blob. `exportProject()` writes a `.nu` bundle. `exportProjectZip()` writes the same files as `.zip` with the manifest under `.nuilith/`.
 
 ### Data Flow: Export
 
-1. **State Gathering**: The system retrieves the current `files` array and `installedPackages` from the reactive state.
-2. **Manifest Generation**: A JSON object is created containing the project metadata.
-3. **Compression**: `JSZip` iterates through the file list, adding each file's content and the manifest to a new archive.
-4. **Blob Trigger**: The archive is generated as a `blob` and triggered for download using an anchor element (`<a>`) with the `.nu` extension.
+1. **State Gathering**: The system retrieves the current `files` array, `installedPackages`, and `entryScript` from the reactive state.
+2. **Manifest Generation**: `buildProjectManifest()` emits `{ packages, entryScript }`.
+3. **Compression**: `JSZip` adds each file plus the manifest (`manifest.json` or `.nuilith/manifest.json`).
+4. **Blob Trigger**: The archive is generated as a `blob` and downloaded with the `.nu` or `.zip` extension.
 
 ```
 Main Thread (index.js)
@@ -57,19 +58,18 @@ Trigger Browser Download (.nu)
 
 ## Import Pipeline & Collision Resolution
 
-The import pipeline supports both single `.py` files and `.nu` project bundles. When a user imports a file, Nuilith must reconcile the incoming data with the existing project in the `projects` object store of `nuilithdb`.
+The import pipeline supports single `.py` files, `.nu` project bundles, and `.zip` bundles. When a user imports a file, Nuilith must reconcile the incoming data with the existing project in the `projects` object store of `nuilithdb`.
 
-### Import Logic (`importProject`)
+### Import Logic (`processFileHandle`)
 
-The `importProject(event)` function handles the file input:
-
-- **Single `.py`**: The file is read via `FileReader` and appended to the `files` array of the current project.
-- **`.nu` Bundle**:
+- **Single `.py`**: The file is read and appended to the `files` array of the current project.
+- **`.nu` or `.zip` Bundle**:
 
 1. The ZIP is decompressed using `JSZip`.
-2. The `manifest.json` is parsed to identify the project name.
-3. **Collision Check**: The system checks if a project with the same name already exists in IndexedDB.
-4. **Resolution**: If a collision occurs, the IDE prompts the user to either overwrite the existing project or cancel the import.
+2. `readBundleManifest()` parses `.nuilith/manifest.json` or root `manifest.json`.
+3. `.py` files are loaded (metadata under `.nuilith/` is skipped). `entryScript` is restored if that filename exists.
+4. **Collision Check**: The system checks if a project with the same name already exists in IndexedDB.
+5. **Resolution**: If a collision occurs, the IDE prompts the user to either overwrite the existing project or cancel the import.
 
 ### Collision Resolution Flow
 

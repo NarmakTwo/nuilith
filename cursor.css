@@ -1,0 +1,111 @@
+/* Cursor: charcoal canvas with teal keywords, peach defs, magenta strings.
+   Token colors live on the cm-s-cursor class; chrome still comes from applyTheme(). */
+.cm-s-cursor.CodeMirror {
+  background: #141414;
+  color: #f0f0f0;
+  font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+}
+
+.cm-s-cursor .CodeMirror-gutters {
+  background: #141414;
+  border-right: 1px solid #2a2a2a;
+  color: #6d6d6d;
+}
+
+.cm-s-cursor .CodeMirror-linenumber {
+  color: #6d6d6d;
+}
+
+.cm-s-cursor .CodeMirror-cursor {
+  border-left: 2px solid #f0f0f0;
+}
+
+.cm-s-cursor .CodeMirror-selected {
+  background: #2a2a2a;
+}
+
+.cm-s-cursor.CodeMirror-focused .CodeMirror-selected {
+  background: #2a2a2a;
+}
+
+.cm-s-cursor .CodeMirror-activeline-background {
+  background: #1c1c1c;
+}
+
+.cm-s-cursor .CodeMirror-matchingbracket {
+  color: #67d2c3 !important;
+  background: #2a2a2a;
+  font-weight: bold;
+}
+
+/* def, class, if, for, return, and, or, not, ... */
+.cm-s-cursor .cm-keyword {
+  color: #67d2c3;
+}
+
+/* True, False, None */
+.cm-s-cursor .cm-atom {
+  color: #67d2c3;
+}
+
+/* Builtin functions: print, len, range, ... */
+.cm-s-cursor .cm-builtin {
+  color: #efb080;
+}
+
+.cm-s-cursor .cm-string {
+  color: #e394dc;
+}
+
+.cm-s-cursor .cm-string-2 {
+  color: #e394dc;
+}
+
+.cm-s-cursor .cm-string.cm-special,
+.cm-s-cursor .cm-string-2.cm-special {
+  color: #efb080;
+}
+
+.cm-s-cursor .cm-comment {
+  color: #6d6d6d;
+  font-style: italic;
+}
+
+.cm-s-cursor .cm-number {
+  color: #efb080;
+}
+
+.cm-s-cursor .cm-operator {
+  color: #f0f0f0;
+}
+
+/* self, cls */
+.cm-s-cursor .cm-variable-2 {
+  color: #67d2c3;
+}
+
+.cm-s-cursor .cm-variable {
+  color: #f0f0f0;
+}
+
+/* Function and class def names */
+.cm-s-cursor .cm-def {
+  color: #efb080;
+}
+
+.cm-s-cursor .cm-variable.cm-callee,
+.cm-s-cursor .cm-tag {
+  color: #efb080;
+}
+
+.cm-s-cursor .cm-meta {
+  color: #67d2c3;
+}
+
+.cm-s-cursor .cm-error {
+  color: #ff5c5c;
+}
+
+.cm-s-cursor .cm-punctuation {
+  color: #f0f0f0;
+}

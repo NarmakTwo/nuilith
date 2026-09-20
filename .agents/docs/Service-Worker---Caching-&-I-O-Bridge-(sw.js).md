@@ -9,7 +9,7 @@ The Service Worker in Nuilith serves a dual purpose: it provides the infrastruct
 
 ## Offline Asset Caching Strategy
 
-Nuilith implements a **Stale-While-Revalidate** caching strategy [sw.js163-176](https://github.com/NarmakTwo/nuilith/blob/9fa46400/sw.js#L163-L176) This ensures that the application loads instantly from the cache while simultaneously fetching updates in the background for the next session.
+Nuilith implements a **Stale-While-Revalidate** caching strategy. Non-GET requests and tracker/TURN URLs bypass the worker so Trystero signaling is not cached. Cache name: `nuilith-cache-v13`.
 
 ### Asset Categorization
 

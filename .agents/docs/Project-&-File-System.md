@@ -61,20 +61,20 @@ Sources: [index.js14-16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/inde
 
 ### File Management
 
-The file system is flat within each project. Users can create, rename, and delete files through the UI, which triggers updates to the `ideState.files` array [index.js180](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L180-L180)
-ActionFunctionLogic**Create**`addFile()`Pushes a new file object to `ideState.files` and sets it as `activeFile`. [index.js347-362](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L347-L362)**Rename**`saveRename()`Updates the filename in the `files` array and updates `activeFile` if the renamed file was open. [index.js324-345](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L324-L345)**Delete**`deleteFile(name)`Removes the file from the array and switches focus to `main.py` if the active file was deleted. [index.js364-378](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L364-L378)**Switch**`selectFile(name)`Updates `activeFile` and loads the corresponding content into the CodeMirror editor. [index.js316-322](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L316-L322)
-Sources: [index.js316-378](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L316-L378)
+The file system is flat within each project. Users can create, rename, and delete files through the UI, which triggers updates to the `ideState.files` array.
+
+Create: `createNewFile()` opens a name prompt. Rename: `finishRename()` (also retargets `entryScript`). Duplicate: `duplicateFile()`. Delete: tab X uses `deleteFile()` (confirms); context-menu Delete uses `deleteFileImmediate()` (no confirm). Drag tabs to reorder. Switch: `switchFile()`. Entry: right-click a tab for `setEntryScript` / `unsetEntryScript`. One entry per project. Run uses that file, or the open tab if unset.
 
 ---
 
-### The .nu Export Format
+### The .nu and .zip Export Formats
 
-To facilitate portability, Nuilith introduces the `.nu` file format. This is a standard JSZip archive containing:
+To facilitate portability, Nuilith exports JSZip archives:
 
-1. **`manifest.json`**: Metadata about the project, including the project name and a list of installed packages.
-2. **Source Files**: All `.py` files belonging to the project.
+1. **`.nu`**: `manifest.json` at the zip root (`packages`, `entryScript`) plus all `.py` files.
+2. **`.zip`**: the same files, with the manifest at `.nuilith/manifest.json`.
 
-The IDE also integrates with the browser's File System Access API via the `launchQueue` to handle opening `.nu` and `.py` files directly from the operating system [index.js685-703](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L685-L703)
+The IDE also integrates with the browser's File System Access API via the `launchQueue` to handle opening `.nu`, `.zip`, and `.py` files directly from the operating system.
 
 **Diagram: Export/Import Pipeline**
 

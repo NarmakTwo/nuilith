@@ -5,6 +5,16 @@
  */
 
 import Alpine from 'alpinejs';
+import {
+    startShare,
+    stopShare,
+    receiveShare,
+    leaveReceive,
+    haltShareSessions,
+    generateShareCode,
+    isValidShareCode,
+    normalizeShareCode
+} from './share.js';
 
 let pythonWorker = null;
 globalThis.term = null;
@@ -13,6 +23,152 @@ globalThis.autosaveTime = Math.floor(Date.now() / 1000);
 globalThis.nuilithPrompt = '[[b;green;]>>> ]';
 let pendingLintCallback = null;
 let lintRequestId = 0;
+// Packages actually present in this worker lifetime. Declared project packages
+// live on ideState.installedPackages and must not be replaced by micropip.list()
+// (that list includes pyflakes and other tooling).
+let runtimeInstalled = new Set();
+let installQueue = Promise.resolve();
+let pendingInstall = null;
+let pendingSync = null;
+let cancelReceiveFn = null;
+
+// Top-level stdlib / runtime names that must never be sent to micropip.
+const PY_STDLIB = new Set([
+    'abc', 'aifc', 'argparse', 'array', 'ast', 'asyncio', 'atexit', 'base64', 'bdb',
+    'binascii', 'bisect', 'builtins', 'bz2', 'calendar', 'cgi', 'cgitb', 'chunk',
+    'cmath', 'cmd', 'code', 'codecs', 'codeop', 'collections', 'colorsys', 'compileall',
+    'concurrent', 'configparser', 'contextlib', 'contextvars', 'copy', 'copyreg',
+    'cProfile', 'csv', 'ctypes', 'curses', 'dataclasses', 'datetime', 'dbm', 'decimal',
+    'difflib', 'dis', 'distutils', 'doctest', 'email', 'encodings', 'ensurepip', 'enum',
+    'errno', 'faulthandler', 'fcntl', 'filecmp', 'fileinput', 'fnmatch', 'fractions',
+    'ftplib', 'functools', 'gc', 'getopt', 'getpass', 'gettext', 'glob', 'graphlib',
+    'grp', 'gzip', 'hashlib', 'heapq', 'hmac', 'html', 'http', 'idlelib', 'imaplib',
+    'imghdr', 'imp', 'importlib', 'inspect', 'io', 'ipaddress', 'itertools', 'json',
+    'keyword', 'lib2to3', 'linecache', 'locale', 'logging', 'lzma', 'mailbox', 'mailcap',
+    'marshal', 'math', 'mimetypes', 'mmap', 'modulefinder', 'msilib', 'msvcrt',
+    'multiprocessing', 'netrc', 'nis', 'nntplib', 'ntpath', 'numbers', 'operator',
+    'optparse', 'os', 'ossaudiodev', 'pathlib', 'pdb', 'pickle', 'pickletools', 'pipes',
+    'pkgutil', 'platform', 'plistlib', 'poplib', 'posix', 'posixpath', 'pprint',
+    'profile', 'pstats', 'pty', 'pwd', 'py_compile', 'pyclbr', 'pydoc', 'queue',
+    'quopri', 'random', 're', 'readline', 'reprlib', 'resource', 'rlcompleter', 'runpy',
+    'sched', 'secrets', 'select', 'selectors', 'shelve', 'shlex', 'shutil', 'signal',
+    'site', 'smtpd', 'smtplib', 'sndhdr', 'socket', 'socketserver', 'spwd', 'sqlite3',
+    'ssl', 'stat', 'statistics', 'string', 'stringprep', 'struct', 'subprocess',
+    'sunau', 'symtable', 'sys', 'sysconfig', 'syslog', 'tabnanny', 'tarfile', 'telnetlib',
+    'tempfile', 'termios', 'test', 'textwrap', 'threading', 'time', 'timeit', 'tkinter',
+    'token', 'tokenize', 'tomllib', 'trace', 'traceback', 'tracemalloc', 'tty', 'turtle',
+    'turtledemo', 'types', 'typing', 'unicodedata', 'unittest', 'urllib', 'uu', 'uuid',
+    'venv', 'warnings', 'wave', 'weakref', 'webbrowser', 'winreg', 'winsound', 'wsgiref',
+    'xdrlib', 'xml', 'xmlrpc', 'zipapp', 'zipfile', 'zipimport', 'zlib', 'zoneinfo',
+    '_thread', '__future__', '__main__', 'js', 'pyodide', 'micropip', 'pyodide_js'
+]);
+
+const IMPORT_ALIASES = {
+    PIL: 'pillow',
+    cv2: 'opencv-python',
+    sklearn: 'scikit-learn',
+    yaml: 'pyyaml',
+    bs4: 'beautifulsoup4',
+    dateutil: 'python-dateutil'
+};
+
+function topLevelModule(name) {
+    return String(name || '').split('.')[0].trim();
+}
+
+/**
+ * Scan Python source for third-party imports. Local project modules and the
+ * stdlib are skipped so we only micropip-install real dependencies.
+ */
+function extractImports(code, localModules) {
+    const found = new Set();
+    const local = new Set((localModules || []).map((n) => n.replace(/\.py$/i, '').toLowerCase()));
+    const lines = String(code || '').split(/\r?\n/);
+    for (const raw of lines) {
+        const line = raw.replace(/#.*$/, '').trim();
+        if (!line) continue;
+        let match = line.match(/^import\s+(.+)$/);
+        if (match) {
+            for (const part of match[1].split(',')) {
+                const mod = topLevelModule(part.replace(/\s+as\s+\w+$/, '').trim());
+                if (mod) found.add(mod);
+            }
+            continue;
+        }
+        match = line.match(/^from\s+(\.?\w[\w.]*)\s+import\s+/);
+        if (match) {
+            if (match[1].startsWith('.')) continue;
+            const mod = topLevelModule(match[1]);
+            if (mod) found.add(mod);
+        }
+    }
+    const packages = [];
+    for (const name of found) {
+        const lower = name.toLowerCase();
+        if (PY_STDLIB.has(lower) || PY_STDLIB.has(name) || local.has(lower)) continue;
+        packages.push(IMPORT_ALIASES[name] || name);
+    }
+    return packages;
+}
+
+function collectProjectImports(files) {
+    const local = (files || []).map((f) => f.name);
+    const all = new Set();
+    for (const f of files || []) {
+        for (const pkg of extractImports(f.code, local)) all.add(pkg);
+    }
+    return [...all];
+}
+
+function resolvePendingInstall(ok, requested) {
+    if (!pendingInstall) return;
+    if (ok) {
+        for (const p of requested || pendingInstall.requested || []) {
+            runtimeInstalled.add(String(p).toLowerCase());
+        }
+    }
+    pendingInstall.resolve();
+    pendingInstall = null;
+}
+
+function installPackages(packages, { silent = true, reason = 'user' } = {}) {
+    const wanted = [...new Set((packages || []).map((p) => String(p).trim()).filter(Boolean))];
+    const missing = wanted.filter((p) => !runtimeInstalled.has(p.toLowerCase()));
+    if (missing.length === 0) return Promise.resolve(wanted);
+    if (!pythonWorker) return Promise.resolve(wanted);
+    return new Promise((resolve) => {
+        pendingInstall = { resolve: () => resolve(wanted), requested: missing };
+        pythonWorker.postMessage({
+            type: 'INSTALL',
+            package: missing,
+            isSilent: silent,
+            reason,
+            requested: missing
+        });
+    });
+}
+
+function enqueueInstall(packages, opts) {
+    installQueue = installQueue.then(() => installPackages(packages, opts)).catch(() => {});
+    return installQueue;
+}
+
+function syncProjectFiles(files) {
+    if (!pythonWorker) return Promise.resolve();
+    return new Promise((resolve) => {
+        pendingSync = resolve;
+        pythonWorker.postMessage({
+            type: 'SYNC_FILES',
+            files: (files || []).map((f) => ({ name: f.name, code: f.code }))
+        });
+        setTimeout(() => {
+            if (pendingSync) {
+                pendingSync();
+                pendingSync = null;
+            }
+        }, 4000);
+    });
+}
 
 // ===== IDB Constants =====
 const DB_NAME = 'nuilithdb';
@@ -56,19 +212,30 @@ function showToast(message, type = 'info') {
 // ===== Worker Init =====
 function initWorker() {
     if (pythonWorker) pythonWorker.terminate();
+    runtimeInstalled = new Set();
+    if (pendingInstall) {
+        pendingInstall.resolve();
+        pendingInstall = null;
+    }
+    if (pendingSync) {
+        pendingSync();
+        pendingSync = null;
+    }
     pythonWorker = new Worker('worker.js');
     globalThis.pythonWorker = pythonWorker;
     pythonWorker.onmessage = (event) => {
         const { type, text, annotations } = event.data;
         if (type === "READY") {
-            // Re-install packages if any were saved
-            const saved = localStorage.getItem('installedPackages');
-            if (saved) {
-                const packages = JSON.parse(saved);
-                if (packages.length > 0) {
-                    pythonWorker.postMessage({ type: "INSTALL", package: packages, isSilent: true });
-                }
+            // Restore the current project's declared packages, not micropip.list().
+            const declared = (window.ideStateData && window.ideStateData.installedPackages)
+                || JSON.parse(localStorage.getItem('installedPackages') || '[]');
+            if (declared.length > 0) {
+                enqueueInstall(declared, { silent: true, reason: 'restore' });
             }
+        }
+        if (type === "FILES_SYNCED" && pendingSync) {
+            pendingSync();
+            pendingSync = null;
         }
         if (type === "LINT_RESULT" && pendingLintCallback) {
             pendingLintCallback(event.data.id ?? 0, annotations);
@@ -97,29 +264,31 @@ function initWorker() {
             term.set_prompt(globalThis.nuilithPrompt);
             if (window.ideStateData) window.ideStateData.running = false;
         }
-        // Micropip handlers
+        // Micropip handlers: merge requested names into the project manifest.
         if (type === "INSTALL_SUCCESS") {
+            const requested = event.data.requested || [];
+            resolvePendingInstall(true, requested);
             if (window.ideStateData) {
-                window.ideStateData.installedPackages = event.data.installedPackages || [];
                 window.ideStateData.installingPackage = false;
-                // Persist to localStorage
-                localStorage.setItem('installedPackages', JSON.stringify(window.ideStateData.installedPackages));
+                if (requested.length) {
+                    window.ideStateData.mergeDeclaredPackages(requested);
+                    window.ideStateData.saveCurrentProjectToDB();
+                }
             }
             if (!event.data.isSilent) {
                 showToast(`Package "${event.data.package}" installed successfully!`, 'success');
             }
         }
         if (type === "INSTALL_ERROR") {
+            resolvePendingInstall(false, event.data.requested || []);
             if (window.ideStateData) window.ideStateData.installingPackage = false;
-            if (!event.data.isSilent) {
+            if (!event.data.isSilent || event.data.reason === 'auto') {
                 showToast(`Failed to install "${event.data.package}": ${event.data.error}`, 'error');
             }
         }
         if (type === "PACKAGE_LIST") {
-            if (window.ideStateData) {
-                window.ideStateData.installedPackages = event.data.installedPackages || [];
-                localStorage.setItem('installedPackages', JSON.stringify(window.ideStateData.installedPackages));
-            }
+            // Declared packages are the source of truth for the project manifest.
+            // Ignore micropip.list() so helper wheels like pyflakes stay off the list.
         }
     };
 }
@@ -193,10 +362,33 @@ document.addEventListener('alpine:init', () => {
         activeFile: 'main.py',
         renamingFile: null,
         renameValue: '',
+        // Filename of the project entry script, or null to run whatever is open.
+        // Persisted on the IndexedDB project record and in export manifests.
+        entryScript: null,
+        // Fixed-position right-click menu for file tabs. Kept off the tab bar
+        // so overflow:auto on .tab-scroll cannot clip it.
+        fileContextMenu: { open: false, x: 0, y: 0, filename: null },
+        dragTabName: null,
+        dragOverTab: null,
+        shareTab: 'send',
+        shareKind: 'project',
+        shareSelected: {},
+        shareCodeInput: '',
+        shareCodeLive: '',
+        shareStatus: 'idle',
+        sharePeers: 0,
+        shareBusy: false,
+        receiveCode: '',
+        receiveDest: 'new',
+        receiveExisting: '',
+        receiveNewName: '',
+        receiveBusy: false,
+        receiveStatus: '',
 
         themes: [
             { id: 'dark', name: 'Dark (Default)', bg: '#1c2130', fg: '#ffffff', keyword: '#c678dd', func: '#61afef', string: '#98c379' },
             { id: 'light', name: 'Light', bg: '#f8fafc', fg: '#1e293b', keyword: '#d73a49', func: '#6f42c1', string: '#032f62' },
+            { id: 'cursor', name: 'Cursor', bg: '#141414', fg: '#f0f0f0', keyword: '#67d2c3', func: '#efb080', string: '#e394dc' },
             { id: 'nord-dark', name: 'Nord Dark', bg: '#2e3440', fg: '#eceff4', keyword: '#81a1c1', func: '#88c0d0', string: '#a3be8c' },
             { id: 'nord-light', name: 'Nord Light', bg: '#e5e9f0', fg: '#2e3440', keyword: '#5e81ac', func: '#81a1c1', string: '#a3be8c' },
             { id: 'dark-red', name: 'Dark Red', bg: '#1a0f0f', fg: '#ff9999', keyword: '#ef4444', func: '#fca5a5', string: '#f87171' },
@@ -212,7 +404,8 @@ document.addEventListener('alpine:init', () => {
             { id: 'github-dark', name: 'GitHub Dark', bg: '#0d1117', fg: '#c9d1d9', keyword: '#ff7b72', func: '#d2a8ff', string: '#a5d6ff' },
             { id: 'github-light', name: 'GitHub Light', bg: '#ffffff', fg: '#24292f', keyword: '#cf222e', func: '#8250df', string: '#0a3069' },
             { id: 'replit-dark', name: 'Replit Dark', bg: '#0e1525', fg: '#f5f9fc', keyword: '#ff5c5c', func: '#5c94ff', string: '#38b584' },
-            { id: 'hc-black', name: 'High Contrast', bg: '#000000', fg: '#ffffff', keyword: '#ffff00', func: '#00ff00', string: '#ff0000' }
+            { id: 'hc-black', name: 'High Contrast', bg: '#000000', fg: '#ffffff', keyword: '#ffff00', func: '#00ff00', string: '#ff0000' },
+            { id: 'hacker', name: 'Hacker', bg: '#000000', fg: '#009F00', keyword: '#549B54', func: '#00CD00', string: '#81F281' }
         ],
 
         /**
@@ -329,7 +522,8 @@ document.addEventListener('alpine:init', () => {
                 tx.objectStore(PROJECTS_STORE).put({
                     projectName: this.currentProject,
                     files: JSON.parse(JSON.stringify(this.files)),
-                    packages: JSON.parse(JSON.stringify(this.installedPackages))
+                    packages: JSON.parse(JSON.stringify(this.installedPackages)),
+                    entryScript: this.entryScript || null
                 });
                 tx.oncomplete = () => resolve();
             });
@@ -350,6 +544,11 @@ document.addEventListener('alpine:init', () => {
                         this.files = req.result.files;
                         this.installedPackages = req.result.packages || [];
                         localStorage.setItem('installedPackages', JSON.stringify(this.installedPackages));
+                        // Drop a stale entry pointer if that file was deleted outside this session.
+                        const savedEntry = req.result.entryScript || null;
+                        this.entryScript = (savedEntry && this.files.some(f => f.name === savedEntry))
+                            ? savedEntry
+                            : null;
 
                         const activeF = this.files.find(f => f.active);
                         this.activeFile = activeF ? activeF.name : this.files[0].name;
@@ -361,6 +560,7 @@ document.addEventListener('alpine:init', () => {
                         // Safe fallback
                         this.files = [{ name: 'main.py', active: true, code: 'print("Hello World")' }];
                         this.installedPackages = [];
+                        this.entryScript = null;
                     }
                     this.isLoaded = true;
                     resolve();
@@ -371,9 +571,9 @@ document.addEventListener('alpine:init', () => {
                 };
             });
 
-            // Re-install packages for new project seamlessly
-            if (globalThis.pythonWorker && this.installedPackages.length > 0) {
-                globalThis.pythonWorker.postMessage({ type: "INSTALL", package: this.installedPackages, isSilent: true });
+            // Re-install declared packages for the newly opened project.
+            if (this.installedPackages.length > 0) {
+                enqueueInstall(this.installedPackages, { silent: true, reason: 'restore' });
             }
 
             if (!isFirstLoad) showToast(`Switched to project: ${projName}`, 'success');
@@ -399,7 +599,8 @@ document.addEventListener('alpine:init', () => {
                     tx.objectStore(PROJECTS_STORE).put({
                         projectName: newName,
                         files: [{ name: 'main.py', active: true, code: '# New Project' }],
-                        packages: []
+                        packages: [],
+                        entryScript: null
                     });
                     tx.oncomplete = async () => {
                         await this.loadProjectList();
@@ -460,6 +661,36 @@ document.addEventListener('alpine:init', () => {
                     };
                     document.getElementById('project_action_modal').close();
                 };
+            } else if (action === 'new-file') {
+                this.projectActionTitle = 'New File';
+                this.projectActionMessage = 'Enter a filename:';
+                this.projectActionType = 'prompt';
+                const existing = this.files.map(f => f.name);
+                let suggested = 'untitled.py';
+                let n = 1;
+                while (existing.includes(suggested)) {
+                    suggested = `untitled${n}.py`;
+                    n++;
+                }
+                this.projectActionInput = suggested;
+                this.projectActionSubmitText = 'Create';
+                this.projectActionCallback = async () => {
+                    let name = this.projectActionInput.trim();
+                    if (!name) return;
+                    if (!name.endsWith('.py')) name += '.py';
+                    if (this.files.some(f => f.name === name)) {
+                        showToast(`File "${name}" already exists`, 'warning');
+                        return;
+                    }
+                    await this.saveCurrentFile();
+                    this.files.push({ name, active: true, code: '' });
+                    this.files = this.files.map(f => ({ ...f, active: f.name === name }));
+                    this.activeFile = name;
+                    if (globalThis.myCodeMirror) globalThis.myCodeMirror.setValue('');
+                    await this.saveCurrentProjectToDB();
+                    showToast(`Created ${name}`, 'success');
+                    document.getElementById('project_action_modal').close();
+                };
             } else if (action === 'delete-file') {
                 if (this.files.length <= 1) {
                     showToast('Cannot delete the last file', 'warning');
@@ -470,13 +701,8 @@ document.addEventListener('alpine:init', () => {
                 this.projectActionType = 'delete';
                 this.projectActionSubmitText = 'Delete';
                 this.projectActionCallback = async () => {
-                    if (this.activeFile === target) {
-                        const newActive = this.files.find(f => f.name !== target).name;
-                        await this.switchFile(newActive);
-                    }
-                    this.files = this.files.filter(f => f.name !== target);
-                    await this.saveCurrentProjectToDB();
-                    showToast(`Deleted ${target}`, 'info');
+                    const ok = await this.removeFileFromProject(target);
+                    if (ok) showToast(`Deleted ${target}`, 'info');
                     document.getElementById('project_action_modal').close();
                 };
             }
@@ -582,6 +808,8 @@ document.addEventListener('alpine:init', () => {
             const themes = {
                 'dark': { bg: '#1c2130', fg: '#ffffff', menu: '#2d3343', accent: '#3b82f6', cm: 'programiz' },
                 'light': { bg: '#f8fafc', fg: '#1e293b', menu: '#e2e8f0', accent: '#3b82f6', cm: 'default' },
+                // Custom CSS in cursor.css; teal/peach/magenta on charcoal.
+                'cursor': { bg: '#141414', fg: '#f0f0f0', menu: '#1c1c1c', accent: '#67d2c3', cm: 'cursor' },
                 'nord-dark': { bg: '#2e3440', fg: '#eceff4', menu: '#3b4252', accent: '#88c0d0', cm: 'nord' },
                 'nord-light': { bg: '#e5e9f0', fg: '#2e3440', menu: '#d8dee9', accent: '#81a1c1', cm: 'default' },
                 'dark-red': { bg: '#1a0f0f', fg: '#ff9999', menu: '#2d1a1a', accent: '#ef4444', cm: 'rubyblue' },
@@ -597,7 +825,9 @@ document.addEventListener('alpine:init', () => {
                 'github-dark': { bg: '#0d1117', fg: '#c9d1d9', menu: '#161b22', accent: '#58a6ff', cm: 'material-darker' },
                 'github-light': { bg: '#ffffff', fg: '#24292f', menu: '#f6f8fa', accent: '#0969da', cm: 'eclipse' },
                 'replit-dark': { bg: '#0e1525', fg: '#f5f9fc', menu: '#1c2333', accent: '#0084ff', cm: 'oceanic-next' },
-                'hc-black': { bg: '#000000', fg: '#ffffff', menu: '#000000', accent: '#00ff00', cm: 'blackboard' }
+                'hc-black': { bg: '#000000', fg: '#ffffff', menu: '#000000', accent: '#00ff00', cm: 'blackboard' },
+                // Custom CSS in hacker.css; phosphor green on pure black.
+                'hacker': { bg: '#000000', fg: '#009F00', menu: '#0a0a0a', accent: '#00CD00', cm: 'hacker' }
             };
             const t = themes[this.theme] || themes.dark;
             document.documentElement.style.setProperty('--bg', t.bg);
@@ -671,25 +901,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         async createNewFile() {
-            let name = 'untitled.py';
-            let counter = 1;
-            const existingNames = this.files.map(f => f.name);
-            while (existingNames.includes(name)) {
-                name = `untitled${counter}.py`;
-                counter++;
-            }
-            await this.saveCurrentFile();
-            this.files.push({ name, active: true, code: '' });
-            this.files = this.files.map(f => ({ ...f, active: f.name === name }));
-            this.activeFile = name;
-            if (globalThis.myCodeMirror) globalThis.myCodeMirror.setValue('');
-            await this.saveCurrentProjectToDB();
-            showToast(`Created ${name}`, 'success');
+            this.openProjectAction('new-file');
         },
 
         startRename(filename) {
             this.renamingFile = filename;
             this.renameValue = filename;
+        },
+
+        renameFileFromMenu(filename) {
+            this.closeFileContextMenu();
+            this.startRename(filename);
         },
 
         async finishRename() {
@@ -708,6 +930,8 @@ document.addEventListener('alpine:init', () => {
                 f.name === oldName ? { ...f, name: newName, active: wasActive } : f
             );
             if (wasActive) this.activeFile = newName;
+            // Keep the entry pointer attached to the renamed file, not the old name.
+            if (this.entryScript === oldName) this.entryScript = newName;
             await this.saveCurrentProjectToDB();
             showToast(`Renamed to ${newName}`, 'success');
         },
@@ -716,8 +940,167 @@ document.addEventListener('alpine:init', () => {
             this.renamingFile = null;
         },
 
+        async duplicateFile(filename) {
+            this.closeFileContextMenu();
+            await this.saveCurrentFile();
+            const src = this.files.find(f => f.name === filename);
+            if (!src) return;
+            const stem = filename.replace(/\.py$/i, '');
+            let name = `${stem}_copy.py`;
+            let n = 2;
+            while (this.files.some(f => f.name === name)) {
+                name = `${stem}_copy${n}.py`;
+                n++;
+            }
+            this.files.push({ name, active: false, code: src.code });
+            await this.saveCurrentProjectToDB();
+            await this.switchFile(name);
+            showToast(`Duplicated as ${name}`, 'success');
+        },
+
+        async removeFileFromProject(filename) {
+            if (this.files.length <= 1) {
+                showToast('Cannot delete the last file', 'warning');
+                return false;
+            }
+            if (this.activeFile === filename) {
+                const newActive = this.files.find(f => f.name !== filename).name;
+                await this.switchFile(newActive);
+            }
+            this.files = this.files.filter(f => f.name !== filename);
+            if (this.entryScript === filename) this.entryScript = null;
+            await this.saveCurrentProjectToDB();
+            return true;
+        },
+
         async deleteFile(filename) {
             this.openProjectAction('delete-file', filename);
+        },
+
+        async deleteFileImmediate(filename) {
+            this.closeFileContextMenu();
+            const ok = await this.removeFileFromProject(filename);
+            if (ok) showToast(`Deleted ${filename}`, 'info');
+        },
+
+        onTabDragStart(event, filename) {
+            this.dragTabName = filename;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', filename);
+        },
+
+        onTabDragOver(event, filename) {
+            if (!this.dragTabName || this.dragTabName === filename) return;
+            this.dragOverTab = filename;
+        },
+
+        async onTabDrop(event, filename) {
+            const fromName = this.dragTabName || event.dataTransfer.getData('text/plain');
+            this.dragTabName = null;
+            this.dragOverTab = null;
+            if (!fromName || fromName === filename) return;
+            const from = this.files.findIndex(f => f.name === fromName);
+            const to = this.files.findIndex(f => f.name === filename);
+            if (from < 0 || to < 0) return;
+            const next = [...this.files];
+            const [item] = next.splice(from, 1);
+            next.splice(to, 0, item);
+            this.files = next;
+            await this.saveCurrentProjectToDB();
+        },
+
+        onTabDragEnd() {
+            this.dragTabName = null;
+            this.dragOverTab = null;
+        },
+
+        /**
+         * Open the file-tab context menu at the cursor. Clamped to the viewport
+         * so a right-click near the edge still leaves the item clickable.
+         */
+        openFileContextMenu(event, filename) {
+            event.preventDefault();
+            event.stopPropagation();
+            const pad = 8;
+            const menuW = 190;
+            const menuH = 200;
+            let x = event.clientX;
+            let y = event.clientY;
+            if (x + menuW > window.innerWidth - pad) x = Math.max(pad, window.innerWidth - menuW - pad);
+            if (y + menuH > window.innerHeight - pad) y = Math.max(pad, window.innerHeight - menuH - pad);
+            this.fileContextMenu = { open: true, x, y, filename };
+        },
+
+        closeFileContextMenu() {
+            this.fileContextMenu = { open: false, x: 0, y: 0, filename: null };
+        },
+
+        /**
+         * Mark one file as the Run-button entry. Replaces any previous entry.
+         */
+        async setEntryScript(filename) {
+            if (!this.files.some(f => f.name === filename)) return;
+            this.entryScript = filename;
+            this.closeFileContextMenu();
+            await this.saveCurrentProjectToDB();
+            showToast(`${filename} set as entry script`, 'success');
+        },
+
+        /**
+         * Clear the entry so Run executes whatever file is currently open.
+         */
+        async unsetEntryScript() {
+            this.entryScript = null;
+            this.closeFileContextMenu();
+            await this.saveCurrentProjectToDB();
+            showToast('Entry script unset. Run uses the open file.', 'info');
+        },
+
+        /**
+         * Code the Run button should send to the worker.
+         * Flushes the editor into the files array first so an entry that is
+         * also the active tab still gets unsaved buffer contents.
+         */
+        getRunCode() {
+            if (globalThis.myCodeMirror) {
+                const idx = this.files.findIndex(f => f.name === this.activeFile);
+                if (idx > -1) this.files[idx].code = globalThis.myCodeMirror.getValue();
+            }
+            if (this.entryScript) {
+                const entry = this.files.find(f => f.name === this.entryScript);
+                if (entry) return entry.code || '';
+                // File vanished; fall back to the open buffer.
+                this.entryScript = null;
+            }
+            return globalThis.myCodeMirror ? globalThis.myCodeMirror.getValue() : '';
+        },
+
+        mergeDeclaredPackages(names) {
+            const next = [...(this.installedPackages || [])];
+            for (const n of names || []) {
+                const name = String(n).trim();
+                if (!name) continue;
+                if (!next.some(p => p.toLowerCase() === name.toLowerCase())) next.push(name);
+            }
+            this.installedPackages = next;
+            localStorage.setItem('installedPackages', JSON.stringify(next));
+        },
+
+        /**
+         * Flush editor, mount .py files, restore declared packages, then
+         * micropip-install any third-party imports not yet on the manifest.
+         */
+        async prepareRun() {
+            await this.saveCurrentFile();
+            await syncProjectFiles(this.files);
+            await enqueueInstall(this.installedPackages, { silent: true, reason: 'restore' });
+            const detected = collectProjectImports(this.files);
+            const missing = detected.filter(p =>
+                !(this.installedPackages || []).some(d => d.toLowerCase() === p.toLowerCase())
+            );
+            if (missing.length) {
+                await enqueueInstall(missing, { silent: true, reason: 'auto' });
+            }
         },
 
         async saveCurrentFile() {
@@ -733,16 +1116,13 @@ document.addEventListener('alpine:init', () => {
         // ---- Packages Methods ----
         openPackages() {
             this.packagesOpen = true;
-            if (pythonWorker) {
-                pythonWorker.postMessage({ type: "LIST_PACKAGES" });
-            }
         },
 
         installPackage() {
             const pkg = this.packageName.trim();
             if (!pkg) return;
             this.installingPackage = true;
-            pythonWorker.postMessage({ type: "INSTALL", package: pkg });
+            enqueueInstall([pkg], { silent: false, reason: 'user' });
             this.packageName = '';
         },
 
@@ -789,20 +1169,50 @@ document.addEventListener('alpine:init', () => {
             a.click();
         },
 
-        async exportProject() { // export .nu project
+        /**
+         * Shared manifest written into both .nu (root) and .zip (.nuilith/) exports.
+         * entryScript is null when Run should use the currently open file.
+         */
+        buildProjectManifest() {
+            return {
+                packages: this.installedPackages || [],
+                entryScript: this.entryScript || null
+            };
+        },
+
+        /**
+         * Build a JSZip of the current project.
+         * format 'nu': manifest.json at the archive root (legacy Nuilith bundle).
+         * format 'zip': manifest at .nuilith/manifest.json so the zip looks like a normal source tree.
+         */
+        async exportProjectBundle(format) {
             await this.saveCurrentProjectToDB();
             const zip = new JSZip();
             for (let f of this.files) {
                 zip.file(f.name, f.code);
             }
-            zip.file('manifest.json', JSON.stringify({ packages: this.installedPackages || [] }, null, 2));
+            const manifest = JSON.stringify(this.buildProjectManifest(), null, 2);
+            if (format === 'zip') {
+                zip.file('.nuilith/manifest.json', manifest);
+            } else {
+                zip.file('manifest.json', manifest);
+            }
 
             const content = await zip.generateAsync({ type: "blob" });
+            const ext = format === 'zip' ? 'zip' : 'nu';
             const a = document.createElement('a');
             a.href = URL.createObjectURL(content);
-            a.download = `${this.currentProject}.nu`;
+            a.download = `${this.currentProject}.${ext}`;
             a.click();
-            showToast(`Exported ${this.currentProject}.nu`, 'success');
+            showToast(`Exported ${this.currentProject}.${ext}`, 'success');
+        },
+
+        async exportProject() { // export .nu project
+            await this.exportProjectBundle('nu');
+        },
+
+        async exportProjectZip() {
+            await this.exportProjectBundle('zip');
         },
 
         async installPWA() {
@@ -815,22 +1225,45 @@ document.addEventListener('alpine:init', () => {
             this.deferredPrompt = null;
         },
 
+        /**
+         * Read project metadata from a .nu (root manifest.json) or a .zip
+         * (.nuilith/manifest.json). Nested Nuilith metadata wins when both exist.
+         */
+        async readBundleManifest(zip) {
+            const nested = zip.file('.nuilith/manifest.json');
+            const root = zip.file('manifest.json');
+            const manifestFile = nested || root;
+            if (!manifestFile) return { packages: [], entryScript: null };
+            try {
+                const parsed = JSON.parse(await manifestFile.async('string'));
+                return {
+                    packages: parsed.packages || [],
+                    entryScript: parsed.entryScript || null
+                };
+            } catch (e) {
+                return { packages: [], entryScript: null };
+            }
+        },
+
         async processFileHandle(file) {
             try {
-                if (file.name.endsWith('.nu')) {
+                if (file.name.endsWith('.nu') || file.name.endsWith('.zip')) {
                     const zip = await JSZip.loadAsync(file);
-                    const projName = file.name.replace('.nu', '');
+                    const projName = file.name.replace(/\.(nu|zip)$/i, '');
 
-                    let manifest = { packages: [] };
+                    const manifest = await this.readBundleManifest(zip);
                     let importedFiles = [];
 
                     for (let relativePath in zip.files) {
-                        if (relativePath === 'manifest.json') {
-                            const mStr = await zip.file(relativePath).async('string');
-                            manifest = JSON.parse(mStr);
-                        } else if (relativePath.endsWith('.py')) {
-                            const content = await zip.file(relativePath).async('string');
-                            importedFiles.push({ name: relativePath, active: false, code: content });
+                        const zf = zip.files[relativePath];
+                        if (zf.dir) continue;
+                        const normalized = relativePath.replace(/\\/g, '/');
+                        // Skip Nuilith metadata; only project source belongs in the editor.
+                        if (normalized === 'manifest.json' || normalized.startsWith('.nuilith/')) continue;
+                        if (normalized.endsWith('.py')) {
+                            const content = await zf.async('string');
+                            const baseName = normalized.split('/').pop();
+                            importedFiles.push({ name: baseName, active: false, code: content });
                         }
                     }
 
@@ -840,13 +1273,21 @@ document.addEventListener('alpine:init', () => {
                         importedFiles[0].active = true;
                     }
 
+                    const entryScript = (manifest.entryScript && importedFiles.some(f => f.name === manifest.entryScript))
+                        ? manifest.entryScript
+                        : null;
+
                     if (this.projectsList.includes(projName)) {
                         this.collisionProjectName = projName;
                         this.renameProjectInput = projName + '_copy';
-                        this.collisionTempData = { files: importedFiles, packages: manifest.packages || [] };
+                        this.collisionTempData = {
+                            files: importedFiles,
+                            packages: manifest.packages || [],
+                            entryScript
+                        };
                         document.getElementById('project_collision_modal').showModal();
                     } else {
-                        await this.saveImportedProject(projName, importedFiles, manifest.packages || []);
+                        await this.saveImportedProject(projName, importedFiles, manifest.packages || [], entryScript);
                     }
 
                 } else if (file.name.endsWith('.py')) {
@@ -869,7 +1310,7 @@ document.addEventListener('alpine:init', () => {
                 const [handle] = await window.showOpenFilePicker({
                     types: [{
                         description: 'Python or Nuilith Project',
-                        accept: { '*/*': ['.py', '.nu'] }
+                        accept: { '*/*': ['.py', '.nu', '.zip'] }
                     }]
                 });
                 const file = await handle.getFile();
@@ -883,7 +1324,7 @@ document.addEventListener('alpine:init', () => {
             const targetName = this.collisionProjectName;
 
             if (action === 'overwrite') {
-                await this.saveImportedProject(targetName, data.files, data.packages);
+                await this.saveImportedProject(targetName, data.files, data.packages, data.entryScript || null);
                 modal.close();
             } else if (action === 'rename') {
                 const newName = this.renameProjectInput.trim();
@@ -892,7 +1333,7 @@ document.addEventListener('alpine:init', () => {
                     showToast('Name already taken!', 'error');
                     return;
                 }
-                await this.saveImportedProject(newName, data.files, data.packages);
+                await this.saveImportedProject(newName, data.files, data.packages, data.entryScript || null);
                 modal.close();
             } else {
                 modal.close();
@@ -900,18 +1341,218 @@ document.addEventListener('alpine:init', () => {
             this.collisionTempData = null;
         },
 
-        async saveImportedProject(name, files, packages) {
+        async saveImportedProject(name, files, packages, entryScript = null) {
             const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
             tx.objectStore(PROJECTS_STORE).put({
                 projectName: name,
                 files: files,
-                packages: packages
+                packages: packages,
+                entryScript: entryScript || null
             });
             tx.oncomplete = async () => {
                 await this.loadProjectList();
                 this.switchProject(name);
                 showToast(`Project '${name}' imported successfully`, 'success');
             };
+        },
+
+        rollShareCode() {
+            return generateShareCode();
+        },
+
+        openShare(tab = 'send') {
+            document.activeElement.blur();
+            this.shareTab = tab;
+            if (this.shareStatus === 'idle') {
+                this.shareKind = 'project';
+                this.shareSelected = Object.fromEntries(this.files.map(f => [f.name, true]));
+                if (!this.shareCodeInput) this.shareCodeInput = generateShareCode();
+            }
+            this.receiveExisting = this.currentProject;
+            if (!this.receiveNewName) this.receiveNewName = `${this.currentProject}_shared`;
+            this.$nextTick(() => document.getElementById('share_modal').showModal());
+        },
+
+        async copyShareCode() {
+            const code = this.shareCodeLive || this.shareCodeInput;
+            try {
+                await navigator.clipboard.writeText(code);
+                showToast('Share code copied', 'success');
+            } catch {
+                showToast('Could not copy share code', 'warning');
+            }
+        },
+
+        async beginShare() {
+            await this.saveCurrentFile();
+            let filesToSend = this.files;
+            if (this.shareKind === 'files') {
+                filesToSend = this.files.filter(f => this.shareSelected[f.name]);
+            }
+            if (!filesToSend.length) {
+                showToast('Select at least one script to share', 'warning');
+                return;
+            }
+            const custom = this.shareCodeInput.trim();
+            if (custom && !isValidShareCode(custom)) {
+                showToast('Share code must be 6 or 7 hex characters', 'warning');
+                return;
+            }
+            this.shareBusy = true;
+            try {
+                const { code } = await startShare({
+                    shareCode: custom || null,
+                    kind: this.shareKind,
+                    projectName: this.currentProject,
+                    files: filesToSend.map(f => ({ name: f.name, code: f.code })),
+                    packages: this.installedPackages || [],
+                    entryScript: this.shareKind === 'project' ? (this.entryScript || null) : null
+                }, {
+                    onPeerCount: (n) => { this.sharePeers = n; },
+                    onStatus: (s) => { this.shareStatus = s; },
+                    onError: (msg) => showToast(String(msg), 'error')
+                });
+                this.shareCodeLive = code;
+                this.shareCodeInput = code;
+                this.shareStatus = 'waiting';
+            } catch (err) {
+                showToast('Could not start sharing', 'error');
+                this.shareStatus = 'idle';
+            }
+            this.shareBusy = false;
+        },
+
+        async cancelShare() {
+            await stopShare();
+            this.shareStatus = 'idle';
+            this.sharePeers = 0;
+            this.shareCodeLive = '';
+            showToast('Stopped sharing', 'info');
+        },
+
+        cancelReceive() {
+            if (cancelReceiveFn) cancelReceiveFn();
+            cancelReceiveFn = null;
+            leaveReceive();
+            this.receiveBusy = false;
+            this.receiveStatus = '';
+        },
+
+        beginReceive() {
+            const code = normalizeShareCode(this.receiveCode);
+            if (!isValidShareCode(code)) {
+                showToast('Enter a 6 or 7 character hex code', 'warning');
+                return;
+            }
+            this.cancelReceive();
+            this.receiveBusy = true;
+            this.receiveStatus = 'Looking for host...';
+            cancelReceiveFn = receiveShare(code, {
+                onStatus: (s) => {
+                    if (s === 'connecting') this.receiveStatus = 'Looking for host...';
+                    if (s === 'connected') this.receiveStatus = 'Connected, waiting for files...';
+                    if (s === 'received') this.receiveStatus = 'Received';
+                },
+                onError: (msg) => {
+                    this.receiveBusy = false;
+                    this.receiveStatus = '';
+                    showToast(String(msg), 'error');
+                },
+                onBundle: (bundle) => {
+                    this.applyReceivedBundle(bundle);
+                }
+            });
+        },
+
+        async applyReceivedBundle(bundle) {
+            this.receiveBusy = false;
+            cancelReceiveFn = null;
+            const files = Array.isArray(bundle?.files) ? bundle.files.filter(f => f && f.name) : [];
+            if (!files.length) {
+                showToast('Share contained no scripts', 'warning');
+                this.receiveStatus = '';
+                return;
+            }
+            const packages = bundle.packages || [];
+            const entryScript = bundle.entryScript || null;
+            const dest = this.receiveDest;
+
+            if (dest === 'new') {
+                let name = (this.receiveNewName || bundle.projectName || 'shared').trim();
+                if (!name) name = 'shared';
+                if (this.projectsList.includes(name)) name = `${name}_${generateShareCode()}`;
+                const imported = files.map((f, i) => ({
+                    name: f.name.endsWith('.py') ? f.name : `${f.name}.py`,
+                    active: i === 0,
+                    code: f.code || ''
+                }));
+                await this.saveImportedProject(name, imported, packages, entryScript);
+            } else {
+                const targetName = dest === 'current' ? this.currentProject : (this.receiveExisting || this.currentProject);
+                if (targetName === this.currentProject) {
+                    await this.mergeFilesIntoCurrent(files, packages, bundle.kind === 'project' ? entryScript : null);
+                } else {
+                    await this.mergeFilesIntoProject(targetName, files, packages, bundle.kind === 'project' ? entryScript : null);
+                    await this.switchProject(targetName);
+                }
+            }
+            this.receiveStatus = '';
+            document.getElementById('share_modal').close();
+            showToast(`Imported ${files.length} script(s)`, 'success');
+        },
+
+        async mergeFilesIntoCurrent(incoming, packages, entryScript) {
+            await this.saveCurrentFile();
+            for (const f of incoming) {
+                const name = f.name.endsWith('.py') ? f.name : `${f.name}.py`;
+                const existing = this.files.findIndex(x => x.name === name);
+                if (existing >= 0) {
+                    this.files[existing].code = f.code || '';
+                } else {
+                    this.files.push({ name, active: false, code: f.code || '' });
+                }
+            }
+            this.mergeDeclaredPackages(packages);
+            if (entryScript && this.files.some(f => f.name === entryScript)) {
+                this.entryScript = entryScript;
+            }
+            await this.saveCurrentProjectToDB();
+            await enqueueInstall(this.installedPackages, { silent: true, reason: 'restore' });
+            const last = incoming[incoming.length - 1];
+            if (last) await this.switchFile(last.name.endsWith('.py') ? last.name : `${last.name}.py`);
+        },
+
+        async mergeFilesIntoProject(projectName, incoming, packages, entryScript) {
+            await this.saveCurrentProjectToDB();
+            await new Promise((resolve) => {
+                const tx = openFilesDB.transaction([PROJECTS_STORE], 'readwrite');
+                const store = tx.objectStore(PROJECTS_STORE);
+                const req = store.get(projectName);
+                req.onsuccess = () => {
+                    const data = req.result || {
+                        projectName,
+                        files: [],
+                        packages: [],
+                        entryScript: null
+                    };
+                    for (const f of incoming) {
+                        const name = f.name.endsWith('.py') ? f.name : `${f.name}.py`;
+                        const idx = data.files.findIndex(x => x.name === name);
+                        if (idx >= 0) data.files[idx].code = f.code || '';
+                        else data.files.push({ name, active: false, code: f.code || '' });
+                    }
+                    const declared = [...(data.packages || [])];
+                    for (const p of packages || []) {
+                        if (p && !declared.some(d => d.toLowerCase() === String(p).toLowerCase())) declared.push(p);
+                    }
+                    data.packages = declared;
+                    if (entryScript && data.files.some(f => f.name === entryScript)) {
+                        data.entryScript = entryScript;
+                    }
+                    store.put(data);
+                };
+                tx.oncomplete = () => resolve();
+            });
         }
     }));
 });
@@ -1065,7 +1706,18 @@ window.addEventListener('load', async () => {
             "Ctrl-Enter": () => runcode(),
             "Ctrl-S": (cm) => { if (window.ideStateData) window.ideStateData.saveCurrentFile(); return false; },
             "Ctrl-Space": "autocomplete",
-            "Esc": (cm) => cm.closeHint?.()
+            "Esc": (cm) => cm.closeHint?.(),
+            "Ctrl-F": "findPersistent",
+            "Cmd-F": "findPersistent",
+            "Ctrl-G": "findNext",
+            "Cmd-G": "findNext",
+            "Shift-Ctrl-G": "findPrev",
+            "Shift-Cmd-G": "findPrev",
+            "Ctrl-H": "replace",
+            "Shift-Ctrl-F": "replace",
+            "Shift-Cmd-F": "replace",
+            "Cmd-Alt-F": "replace",
+            "Alt-G": "jumpToLine"
         }
     });
 
@@ -1079,11 +1731,21 @@ window.addEventListener('load', async () => {
     setupTimers();
 });
 
-function runcode() {
+async function runcode() {
     term.clear();
     if (term.set_prompt) term.set_prompt('');
     if (window.ideStateData) window.ideStateData.running = true;
-    pythonWorker.postMessage({ type: "RUN", code: myCodeMirror.getValue() });
+    if (window.ideStateData) {
+        try {
+            await window.ideStateData.prepareRun();
+        } catch (err) {
+            showToast('Could not prepare run: ' + (err.message || err), 'warning');
+        }
+    }
+    const code = window.ideStateData
+        ? window.ideStateData.getRunCode()
+        : myCodeMirror.getValue();
+    pythonWorker.postMessage({ type: "RUN", code });
 }
 window.runcode = runcode;
 
@@ -1101,6 +1763,11 @@ function setupTimers() {
     }, 30000);
 }
 
+window.addEventListener('pagehide', () => {
+    haltShareSessions();
+});
+
 window.addEventListener('beforeunload', () => {
+    haltShareSessions();
     if (window.ideStateData) window.ideStateData.saveCurrentFile();
 });

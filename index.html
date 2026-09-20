@@ -72,6 +72,8 @@
     <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/oceanic-next.css">
     <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.21/theme/blackboard.css">
     <link rel="stylesheet" type="text/css" href="/programiz-inspired.css">
+    <link rel="stylesheet" type="text/css" href="/hacker.css">
+    <link rel="stylesheet" type="text/css" href="/cursor.css">
 
     <!-- codemirror addons -->
     <script src="https://unpkg.com/codemirror@5.65.21/addon/comment/comment.js"></script>
@@ -116,7 +118,7 @@
 
 </head>
 
-<body x-data="ideState" x-init="init()">
+<body x-data="ideState" x-init="init()" @keydown.escape.window="closeFileContextMenu()">
 
     <!-- Toast Container -->
     <div id="toast-container" class="toast toast-end toast-top z-[100]" style="top: 1rem; right: 1rem;"></div>
@@ -240,7 +242,35 @@
                             <line x1="10" y1="11" x2="10" y2="17"></line>
                             <line x1="14" y1="11" x2="14" y2="17"></line>
                         </svg> Delete Project</a></li>
+                <div class="divider my-1 before:bg-black/10 dark:before:bg-white/10 after:bg-black/10 dark:after:bg-white/10"></div>
+                <li><a @mousedown.prevent="openShare('send');" class="cursor-pointer hover:bg-black/10 hover:dark:bg-white/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg> Share</a></li>
+                <li><a @mousedown.prevent="openShare('receive');" class="cursor-pointer hover:bg-black/10 hover:dark:bg-white/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 inline" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg> Import from share</a></li>
             </ul>
+        </div>
+
+        <!-- Live share chip so Cancel is reachable without reopening the modal. -->
+        <div x-show="shareStatus === 'waiting' || shareStatus === 'connected'" x-cloak
+            class="flex items-center gap-2 header-box rounded-xl px-3 py-2 shadow-lg shadow-black/40">
+            <span class="text-xs opacity-70">Sharing</span>
+            <span class="font-mono text-sm tracking-wider" x-text="shareCodeLive"></span>
+            <span class="text-xs opacity-60" x-text="sharePeers ? (sharePeers + ' connected') : 'waiting'"></span>
+            <button type="button" class="btn btn-xs btn-ghost" @click="cancelShare()">Cancel</button>
         </div>
 
     </div>
@@ -309,12 +339,24 @@
                                         x-init="$nextTick(() => $el.focus())"
                                         class="input input-xs input-bordered w-24 bg-gray-700 text-white text-xs" />
                                 </template>
-                                <!-- Normal Tab -->
+                                <!-- Normal Tab: drag handle is the whole join so reorder matches visual order. -->
                                 <template x-if="renamingFile !== f.name">
-                                    <div class="join">
+                                    <div class="join" draggable="true"
+                                        :class="{ 'tab-dragging': dragTabName === f.name, 'tab-drop-target': dragOverTab === f.name }"
+                                        @dragstart="onTabDragStart($event, f.name)"
+                                        @dragover.prevent="onTabDragOver($event, f.name)"
+                                        @drop.prevent="onTabDrop($event, f.name)"
+                                        @dragend="onTabDragEnd()"
+                                        @contextmenu.prevent="openFileContextMenu($event, f.name)">
                                         <button @click="switchFile(f.name)" @dblclick="startRename(f.name)"
                                             :class="activeFile === f.name ? 'tab-active' : 'tab-inactive'"
+                                            :title="entryScript === f.name ? 'Entry script. Drag to reorder.' : (f.name + '. Drag to reorder.')"
                                             class="btn btn-xs join-item rounded-l-lg text-xs font-mono flex items-center gap-1 whitespace-nowrap border-none pr-1">
+                                            <svg x-show="entryScript === f.name" xmlns="http://www.w3.org/2000/svg"
+                                                class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"
+                                                aria-hidden="true">
+                                                <path d="M8 5v14l11-7z" />
+                                            </svg>
                                             <span x-text="f.name"></span>
                                         </button>
                                         <button x-show="files.length > 1" @click="deleteFile(f.name)"
@@ -332,8 +374,15 @@
 
                     <!-- Classic single-file tab (shown when tabs are off) -->
                     <li x-show="!newUI || !featureTabs" class="items-center justify-center text-center">
-                        <p class="flex text-sm w-24 h-8 items-center justify-center rounded-lg tab-inactive font-mono"
-                            x-text="activeFile"></p>
+                        <p class="flex text-sm w-24 h-8 items-center justify-center rounded-lg tab-inactive font-mono gap-1"
+                            @contextmenu.prevent="openFileContextMenu($event, activeFile)"
+                            :title="entryScript === activeFile ? 'Entry script' : activeFile">
+                            <svg x-show="entryScript === activeFile" xmlns="http://www.w3.org/2000/svg"
+                                class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <span x-text="activeFile"></span>
+                        </p>
                     </li>
 
                     <li class="flex items-center gap-2">
@@ -366,7 +415,7 @@
                             </div>
                             <ul tabindex="0"
                                 style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
-                                class="dropdown-content z-[200] menu p-1 shadow rounded-box w-44 border mt-1 space-y-1">
+                                class="dropdown-content z-[200] menu p-1 shadow rounded-box w-52 border mt-1 space-y-1">
                                 <li><a @mousedown.prevent="savecode(); document.activeElement.blur();"
                                         class="text-xs p-2.5 cursor-pointer hover:bg-black/10 hover:dark:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg"
                                             class="w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24" fill="none"
@@ -387,6 +436,11 @@
                                                 d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
                                             </path>
                                         </svg> Export Project (.nu)</a></li>
+                                <li><a @mousedown.prevent="exportProjectZip(); document.activeElement.blur();"
+                                        class="text-xs p-2.5 cursor-pointer hover:bg-black/10 hover:dark:bg-white/10">
+                                        <svg class="w-4 h-4 mr-1" viewBox="0 0 115.28 122.88" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path fill="#92959D" fill-rule="evenodd" clip-rule="evenodd" d="M25.38,57h64.88V37.34H69.59c-2.17,0-5.19-1.17-6.62-2.6c-1.43-1.43-2.3-4.01-2.3-6.17V7.64l0,0H8.15 c-0.18,0-0.32,0.09-0.41,0.18C7.59,7.92,7.55,8.05,7.55,8.24v106.45c0,0.14,0.09,0.32,0.18,0.41c0.09,0.14,0.28,0.18,0.41,0.18 c22.78,0,58.09,0,81.51,0c0.18,0,0.17-0.09,0.27-0.18c0.14-0.09,0.33-0.28,0.33-0.41v-11.16H25.38c-4.14,0-7.56-3.4-7.56-7.56 V64.55C17.82,60.4,21.22,57,25.38,57L25.38,57z M35.34,67.55H57.6v5.1L43.31,87.57h14.83v5.48H33.96v-5.29L48.1,73H35.34V67.55 L35.34,67.55z M63.24,67.55h7.91v25.5h-7.91V67.55L63.24,67.55z M78,67.55H91.1c2.86,0,4.99,0.68,6.42,2.04 c1.42,1.36,2.13,3.29,2.13,5.8c0,2.58-0.78,4.59-2.33,6.04c-1.55,1.45-3.92,2.18-7.1,2.18H85.9v9.44H78V67.55L78,67.55z M85.9,78.45h1.94c1.53,0,2.61-0.27,3.22-0.8c0.62-0.53,0.93-1.2,0.93-2.03c0-0.8-0.27-1.48-0.81-2.04 c-0.53-0.56-1.54-0.84-3.03-0.84H85.9V78.45L85.9,78.45z M97.79,57h9.93c4.16,0,7.56,3.41,7.56,7.56v31.42 c0,4.15-3.41,7.56-7.56,7.56h-9.93v13.55c0,1.61-0.65,3.04-1.7,4.1c-1.06,1.06-2.49,1.7-4.1,1.7c-29.44,0-56.59,0-86.18,0 c-1.61,0-3.04-0.64-4.1-1.7c-1.06-1.06-1.7-2.49-1.7-4.1V5.85c0-1.61,0.65-3.04,1.7-4.1c1.06-1.06,2.53-1.7,4.1-1.7h58.72 C64.66,0,64.8,0,64.94,0c0.64,0,1.29,0.28,1.75,0.69h0.09c0.09,0.05,0.14,0.09,0.23,0.18l29.99,30.36c0.51,0.51,0.88,1.2,0.88,1.98 c0,0.23-0.05,0.41-0.09,0.65V57L97.79,57z M67.52,27.97V8.94l21.43,21.7H70.19c-0.74,0-1.38-0.32-1.89-0.78 C67.84,29.4,67.52,28.71,67.52,27.97L67.52,27.97z"/>
+                                        </svg> Export Project (.zip)</a></li>
                             </ul>
                         </div>
                         <button @click="startRepl()" class="btn btn-xs btn-outline btn-success"
@@ -700,6 +754,156 @@
         </div>
         <form method="dialog" class="modal-backdrop">
             <button @click="resolveCollision('cancel')">close</button>
+        </form>
+    </dialog>
+
+    <!-- File tab context menu: fixed so the tab overflow scroller cannot clip it. -->
+    <div x-show="fileContextMenu.open" x-cloak
+        @click.outside="closeFileContextMenu()"
+        @contextmenu.prevent
+        class="file-context-menu"
+        :style="'top:' + fileContextMenu.y + 'px; left:' + fileContextMenu.x + 'px;'"
+        role="menu">
+        <template x-if="fileContextMenu.filename && fileContextMenu.filename !== entryScript">
+            <button type="button" role="menuitem"
+                @mousedown.prevent="setEntryScript(fileContextMenu.filename)">
+                Set as entry script
+            </button>
+        </template>
+        <template x-if="fileContextMenu.filename && fileContextMenu.filename === entryScript">
+            <button type="button" role="menuitem"
+                @mousedown.prevent="unsetEntryScript()">
+                Unset entry script
+            </button>
+        </template>
+        <div class="file-context-menu-sep" role="separator"></div>
+        <button type="button" role="menuitem"
+            @mousedown.prevent="renameFileFromMenu(fileContextMenu.filename)">
+            Rename
+        </button>
+        <button type="button" role="menuitem"
+            @mousedown.prevent="duplicateFile(fileContextMenu.filename)">
+            Duplicate
+        </button>
+        <button type="button" role="menuitem" class="danger"
+            @mousedown.prevent="deleteFileImmediate(fileContextMenu.filename)">
+            Delete
+        </button>
+    </div>
+
+    <!-- Share / receive over WebRTC. Closing the dialog does not cancel an active host session. -->
+    <dialog id="share_modal" class="modal">
+        <div style="background-color: var(--menu); color: var(--fg); border-color: rgba(148, 163, 184, 0.15);"
+            class="modal-box border shadow-2xl max-w-lg">
+            <h3 class="font-bold text-lg">Share</h3>
+            <div class="tabs tabs-box mt-4 mb-4" style="background-color: var(--bg);">
+                <button type="button" class="tab" :class="shareTab === 'send' && 'tab-active'"
+                    @click="shareTab = 'send'">Send</button>
+                <button type="button" class="tab" :class="shareTab === 'receive' && 'tab-active'"
+                    @click="shareTab = 'receive'">Receive</button>
+            </div>
+
+            <div x-show="shareTab === 'send'" class="space-y-4">
+                <p class="text-sm opacity-70">Create a 6 or 7 character hex code, pick what to send, then keep this tab open until the other client imports.</p>
+                <label class="form-control">
+                    <span class="label-text text-xs opacity-70 mb-1">Share code</span>
+                    <div class="flex gap-2">
+                        <input type="text" maxlength="7" x-model="shareCodeInput" :disabled="shareStatus !== 'idle'"
+                            placeholder="auto"
+                            class="input input-bordered input-sm flex-1 font-mono"
+                            style="background-color: var(--bg); color: var(--fg);" />
+                        <button type="button" class="btn btn-sm btn-ghost" :disabled="shareStatus !== 'idle'"
+                            @click="shareCodeInput = rollShareCode()">Random</button>
+                    </div>
+                </label>
+                <div class="flex flex-col gap-2 text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="shareKind" value="project" x-model="shareKind" :disabled="shareStatus !== 'idle'" />
+                        Entire project
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="shareKind" value="files" x-model="shareKind" :disabled="shareStatus !== 'idle'" />
+                        Selected scripts
+                    </label>
+                </div>
+                <div x-show="shareKind === 'files'" class="max-h-40 overflow-y-auto border rounded-lg p-2 space-y-1"
+                    style="border-color: rgba(148, 163, 184, 0.15);">
+                    <template x-for="f in files" :key="'share-' + f.name">
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="checkbox" :disabled="shareStatus !== 'idle'"
+                                :checked="shareSelected[f.name]"
+                                @change="shareSelected = { ...shareSelected, [f.name]: $event.target.checked }" />
+                            <span class="font-mono" x-text="f.name"></span>
+                        </label>
+                    </template>
+                </div>
+                <div x-show="shareStatus !== 'idle'" class="rounded-lg p-3 space-y-2"
+                    style="background-color: var(--bg);">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-mono text-xl tracking-widest" x-text="shareCodeLive"></span>
+                        <button type="button" class="btn btn-xs" @click="copyShareCode()">Copy</button>
+                    </div>
+                    <p class="text-xs opacity-70" x-text="shareStatus === 'connected' ? (sharePeers + ' client(s) connected') : 'Waiting for a client'"></p>
+                </div>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost"
+                        @click="document.getElementById('share_modal').close()">Close</button>
+                    <button type="button" class="btn btn-error" x-show="shareStatus !== 'idle'"
+                        @click="cancelShare()">Cancel sharing</button>
+                    <button type="button" class="btn btn-primary" x-show="shareStatus === 'idle'"
+                        :disabled="shareBusy" @click="beginShare()">
+                        <span x-show="shareBusy" class="loading loading-spinner loading-xs"></span>
+                        Start sharing
+                    </button>
+                </div>
+            </div>
+
+            <div x-show="shareTab === 'receive'" class="space-y-4">
+                <p class="text-sm opacity-70">Enter the host hex code, then choose where the imported scripts or project should land.</p>
+                <label class="form-control">
+                    <span class="label-text text-xs opacity-70 mb-1">Share code</span>
+                    <input type="text" maxlength="7" x-model="receiveCode"
+                        class="input input-bordered input-sm font-mono"
+                        style="background-color: var(--bg); color: var(--fg);"
+                        placeholder="abcdef" />
+                </label>
+                <label class="form-control">
+                    <span class="label-text text-xs opacity-70 mb-1">Import into</span>
+                    <select x-model="receiveDest" class="select select-bordered select-sm"
+                        style="background-color: var(--bg); color: var(--fg);">
+                        <option value="new">New project</option>
+                        <option value="current">Current project</option>
+                        <option value="existing">Existing project</option>
+                    </select>
+                </label>
+                <label x-show="receiveDest === 'new'" class="form-control">
+                    <span class="label-text text-xs opacity-70 mb-1">New project name</span>
+                    <input type="text" x-model="receiveNewName" class="input input-bordered input-sm"
+                        style="background-color: var(--bg); color: var(--fg);" />
+                </label>
+                <label x-show="receiveDest === 'existing'" class="form-control">
+                    <span class="label-text text-xs opacity-70 mb-1">Project</span>
+                    <select x-model="receiveExisting" class="select select-bordered select-sm"
+                        style="background-color: var(--bg); color: var(--fg);">
+                        <template x-for="proj in projectsList" :key="'recv-' + proj">
+                            <option :value="proj" x-text="proj"></option>
+                        </template>
+                    </select>
+                </label>
+                <p x-show="receiveStatus" class="text-xs opacity-70" x-text="receiveStatus"></p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost"
+                        @click="cancelReceive(); document.getElementById('share_modal').close()">Close</button>
+                    <button type="button" class="btn btn-ghost" x-show="receiveBusy" @click="cancelReceive()">Cancel</button>
+                    <button type="button" class="btn btn-primary" :disabled="receiveBusy" @click="beginReceive()">
+                        <span x-show="receiveBusy" class="loading loading-spinner loading-xs"></span>
+                        Import
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
         </form>
     </dialog>
 

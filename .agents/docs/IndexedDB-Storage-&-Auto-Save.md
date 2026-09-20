@@ -12,8 +12,8 @@ The IDE uses a single IndexedDB database named `nuilithdb`[index.js14](https://g
 
 ### The `projects` Object Store
 
-The primary storage unit is the `projects` object store [index.js16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L16-L16) Each entry in this store represents a self-contained workspace.
-FieldTypeDescription`id``String`Unique identifier (Project Name). Key path for the store.`files``Array<Object>`List of file objects: `{ name: String, content: String }`.`activeFile``String`The filename currently open in the editor.`packages``Array<String>`List of PyPI packages installed via `micropip`.`lastModified``Number`Timestamp of the last save operation.
+The primary storage unit is the `projects` object store. Each entry in this store represents a self-contained workspace.
+FieldTypeDescription`projectName``String`Unique identifier (Project Name). Key path for the store.`files``Array<Object>`List of file objects: `{ name: String, code: String, active: Boolean }`.`packages``Array<String>`Declared project packages (user installs plus auto-detected imports). Restored on READY / import / Run. Not the full `micropip.list()`.`entryScript``String or null`Filename Run executes. `null` means use the currently open file.
 ### Database Initialization Flow
 
 When the IDE loads, it initializes the connection via `initDB()`[index.js241-274](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L241-L274) This function handles the creation of the object store and executes version-specific migrations.

@@ -3,3 +3,4 @@ public/
 dist/
 .DS_Store
 *.local
+*.env

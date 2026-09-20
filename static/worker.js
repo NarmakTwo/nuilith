@@ -92,19 +92,49 @@ check(code_str, "main.py", r)
         return;
     }
 
+    // Mount project .py files into the Pyodide FS so `import sibling` works.
+    if (type === "SYNC_FILES") {
+        const files = event.data.files || [];
+        if (pyodide) {
+            for (const f of files) {
+                const name = String(f.name || '').replace(/\\/g, '/').split('/').pop();
+                if (!name) continue;
+                pyodide.FS.writeFile('/home/pyodide/' + name, f.code ?? '');
+            }
+        }
+        self.postMessage({ type: "FILES_SYNCED" });
+        return;
+    }
+
     // --- MICROPIP INSTALL HANDLER ---
     if (type === "INSTALL") {
         const pkg = event.data.package;
         const isSilent = event.data.isSilent || false;
+        const reason = event.data.reason || 'user';
+        const packagesToInstall = Array.isArray(pkg) ? pkg.filter(Boolean) : (pkg ? [pkg] : []);
         if (!pyodide) {
-            self.postMessage({ type: "INSTALL_ERROR", package: pkg, error: "Python runtime not ready yet.", isSilent });
+            self.postMessage({
+                type: "INSTALL_ERROR",
+                package: Array.isArray(pkg) ? pkg.join(', ') : pkg,
+                requested: packagesToInstall,
+                error: "Python runtime not ready yet.",
+                isSilent,
+                reason
+            });
             return;
         }
         try {
-            // Handle both string and array
-            const packagesToInstall = Array.isArray(pkg) ? pkg : [pkg];
-            // Skip if empty array
-            if (packagesToInstall.length === 0) return;
+            // Empty list is a no-op success so the UI install queue can resolve.
+            if (packagesToInstall.length === 0) {
+                self.postMessage({
+                    type: "INSTALL_SUCCESS",
+                    package: '',
+                    requested: [],
+                    isSilent,
+                    reason
+                });
+                return;
+            }
 
             self.__packages_to_install__ = packagesToInstall;
             await pyodide.runPythonAsync(`
@@ -113,26 +143,21 @@ from js import __packages_to_install__
 pkgs = __packages_to_install__.to_py()
 await micropip.install(pkgs)
             `);
-            // Get updated list of installed packages
-            const listResult = await pyodide.runPythonAsync(`
-import micropip, json
-# Filter out internal/helper packages if desired, or just return all
-all_pkgs = sorted([str(p) for p in micropip.list()])
-json.dumps(all_pkgs)
-            `);
-            const packages = JSON.parse(listResult.toString());
             self.postMessage({
                 type: "INSTALL_SUCCESS",
-                package: Array.isArray(pkg) ? pkg.join(', ') : pkg,
-                installedPackages: packages,
-                isSilent
+                package: packagesToInstall.join(', '),
+                requested: packagesToInstall,
+                isSilent,
+                reason
             });
         } catch (err) {
             self.postMessage({
                 type: "INSTALL_ERROR",
-                package: Array.isArray(pkg) ? pkg.join(', ') : pkg,
+                package: packagesToInstall.join(', '),
+                requested: packagesToInstall,
                 error: String(err.message),
-                isSilent
+                isSilent,
+                reason
             });
         }
         return;

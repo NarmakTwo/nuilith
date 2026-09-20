@@ -66,3 +66,9 @@ For in-depth technical knowledge, refer to the following documents in `.agents/d
 ### Package & Linting
 - [Micropip Package Manager](docs/micropip-Package-Manager.md): Installing dependencies in the worker.
 - [Live Linting](docs/Live-Linting-with-Pyflakes.md): Background code analysis using Pyflakes.
+
+### Planned
+- [nuphaser](../nuphaser.md): Phaser-backed Python game library (design only). Dual runtime: Nuilith panel vs CPython localhost server.
+
+### Sharing
+- [Peer Code Sharing](docs/Peer-Code-Sharing.md): WebRTC + Trystero rooms, ExpressTURN fallback, 6-7 hex share codes.

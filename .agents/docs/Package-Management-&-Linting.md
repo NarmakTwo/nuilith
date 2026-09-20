@@ -14,8 +14,8 @@ The package management system allows users to install pure-Python libraries dire
 1. **UI Trigger**: The user enters a package name into the `packageName` model and triggers `installPackage()`[index.js140-142](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L140-L142)
 2. **Worker Communication**: The main thread sends an `INSTALL` message to the worker [index.js64](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L64-L64)
 3. **Pyodide Execution**: The worker uses `micropip.install()` to fetch and load the package [worker.js100-103](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L100-L103)
-4. **State Synchronization**: Upon success, the worker returns an `INSTALL_SUCCESS` message containing the updated list of installed packages [worker.js113-118](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L113-L118)
-5. **Persistence**: The list of installed packages is persisted to `localStorage`[index.js101](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L101-L101) On project reload or worker restart, these packages are silently re-installed to maintain environment consistency [index.js58-67](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L58-L67)
+4. **State Synchronization**: Upon success, the worker returns `INSTALL_SUCCESS` with the `requested` package names. The main thread merges those into the declared project list.
+5. **Persistence**: Declared packages are stored on the IndexedDB project, `localStorage`, and export manifests. They are restored on READY, project import/switch, and Run. Auto-install on Run also scans imports and adds new names to that declared list.
 
 ### Package Manager Entity Map
 

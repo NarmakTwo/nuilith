@@ -9,7 +9,9 @@ This page details the deployment configuration and infrastructure requirements f
 ## Render Deployment Configuration
 
 Nuilith is optimized for deployment on **Render** as a static site. The configuration is defined in `render.yaml`, which specifies a zero-build environment where the root directory is served directly.
-ParameterValueDescription`type``web`Defines the service type. [render.yaml2](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L2-L2)`env``static`Specifies a static site environment (no backend runtime). [render.yaml4](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L4-L4)`buildCommand``echo 'No build required'`Nuilith is a pure HTML/JS/CSS project and requires no compilation step. [render.yaml5](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L5-L5)`staticPublishPath``.`Serves files from the repository root. [render.yaml6](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L6-L6)
+ParameterValueDescription`type``web`Defines the service type. [render.yaml2](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L2-L2)`env``static`Specifies a static site environment (no backend runtime). [render.yaml4](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L4-L4)`buildCommand``echo 'No build required'`Nuilith is a pure HTML/JS/CSS project and requires no compilation step. [render.yaml5](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L5-L5)`staticPublishPath``public`Vite build output. [render.yaml6](https://github.com/NarmakTwo/nuilith/blob/9fa46400/render.yaml#L6-L6)
+
+Peer sharing needs ExpressTURN credentials at **build** time. Locally that is `secrets.env`. On the host, set `turn_server`, `expressturn_username`, and `expressturn_password` as build env vars (Cloudflare Pages: Settings, Variables and Secrets). Those values are compiled into the client bundle. Never commit them.
 ### Deployment Architecture
 
 The following diagram illustrates how the static assets defined in the repository are served to the client browser.

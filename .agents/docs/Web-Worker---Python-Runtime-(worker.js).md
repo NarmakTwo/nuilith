@@ -24,7 +24,7 @@ The worker initializes by loading the Pyodide library from a CDN and bootstrappi
 ## Message Protocol & Implementation
 
 The worker communicates with the Main Thread via a structured messaging protocol handled in the `self.onmessage` event listener [worker.js19](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L19-L19)
-Message TypePurposeKey Data Fields`RUN`Executes a full Python script with I/O redirection [worker.js202](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L202-L202)`code``LINT`Runs Pyflakes analysis on the provided code [worker.js22](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L22-L22)`code`, `id``INSTALL`Installs pure-Python packages via micropip [worker.js85](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L85-L85)`package`, `isSilent``EVAL_REPL`Evaluates a single line/block for the REPL [worker.js149](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L149-L149)`code``LIST_PACKAGES`Retrieves a list of currently installed packages [worker.js131](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L131-L131)N/A
+Message TypePurposeKey Data Fields`RUN`Executes a full Python script with I/O redirection`code``SYNC_FILES`Writes project `.py` files into `/home/pyodide/` so local imports resolve`files``LINT`Runs Pyflakes analysis on the provided code`code`, `id``INSTALL`Installs pure-Python packages via micropip`package`, `isSilent`, `reason``EVAL_REPL`Evaluates a single line/block for the REPL`code``LIST_PACKAGES`Retrieves micropip's environment list (not used for the project manifest)N/A
 ### Message Handling Flow
 
 The following diagram illustrates how `worker.js` routes incoming `postMessage` requests to specific Python execution contexts.

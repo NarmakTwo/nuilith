@@ -12,7 +12,7 @@ Nuilith is a browser-based Python Integrated Development Environment (IDE) desig
 Nuilith uses a virtual workspace system that allows users to manage multiple Python scripts within a single project context. The state is persisted using **IndexedDB** via the `nuilithdb` database [index.js14-16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L14-L16)
 
 - **Project Switching**: Users can create, rename, and switch between isolated projects. Each project maintains its own set of files and installed packages [index.js168-170](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L168-L170)
-- **File Management**: The IDE supports adding, deleting, and renaming `.py` files within the active project [index.js180-184](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L180-L184)
+- **File Management**: The IDE supports adding, deleting, renaming, duplicating, and drag-reordering `.py` files. New file asks for a name. Right-click a file tab for Set/Unset entry script, Rename, Duplicate, and Delete (right-click Delete does not confirm). The tab X still confirms. When an entry script is set, Run executes that file even if another tab is open. When it is unset, Run executes the file currently open in the editor. The choice is stored on the project record and in export manifests.
 - **Auto-Save**: To prevent data loss, the `ideState` triggers an auto-save protocol that commits the current editor buffer to IndexedDB every 30 seconds or immediately upon code execution [index.js8](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L8-L8)
 
 **Sources:**[index.js8-16](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L8-L16)[index.js168-184](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L168-L184)[README.md71-75](https://github.com/NarmakTwo/nuilith/blob/9fa46400/README.md?plain=1#L71-L75)
@@ -38,8 +38,8 @@ Nuilith integrates **Pyflakes** to provide real-time feedback on code quality. T
 
 The IDE supports installing pure-Python packages directly from PyPI using the `micropip` library.
 
-- **Installation**: Users input a package name in the UI, which triggers `installPackage()`. This sends an `INSTALL` message to the worker [index.js96-112](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L96-L112)
-- **Persistence**: Successfully installed packages are stored in `localStorage`[index.js101](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L101-L101) Upon IDE restart or worker re-initialization, the system performs a "silent" re-installation to restore the environment [index.js58-67](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L58-L67)
+- **Installation**: Users input a package name in the UI, which triggers `installPackage()`. This queues an `INSTALL` message to the worker. Run also scans `import` / `from` lines, skips stdlib and local modules, micropip-installs the rest, and merges those names into the project `packages` list (not `micropip.list()`, which includes pyflakes).
+- **Persistence**: Declared packages live on the IndexedDB project record, `localStorage`, and export manifests. They are restored silently when the worker sends `READY`, when switching or importing a project, and again at the start of Run if any are missing from this worker lifetime.
 - **Limitations**: Only pure-Python packages are supported; packages requiring native C-extensions (not already included in Pyodide) cannot be installed [README.md81](https://github.com/NarmakTwo/nuilith/blob/9fa46400/README.md?plain=1#L81-L81)
 
 **Sources:**[index.js58-67](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L58-L67)[index.js96-112](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L96-L112)[README.md81](https://github.com/NarmakTwo/nuilith/blob/9fa46400/README.md?plain=1#L81-L81)
@@ -66,18 +66,21 @@ FeatureDescriptionImplementation**Themes**15+ themes (e.g., Monokai, Dracula, No
 
 ---
 
-### The .nu Export Format
+### The .nu and .zip Export Formats
 
-To facilitate project portability, Nuilith uses a custom `.nu` bundle format.
+To facilitate project portability, Nuilith uses JSZip bundles.
 
-- **Structure**: A `.nu` file is a **JSZip** archive [index.html101](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L101-L101)
-- **Contents**:
-
-1. `manifest.json`: Contains project metadata and the list of required PyPI packages.
-2. Source Files: All `.py` files associated with the project.
-- **Import Logic**: When a `.nu` file is uploaded, the IDE extracts the contents, populates the IndexedDB store, and triggers the package manager to install the dependencies listed in the manifest [README.md75](https://github.com/NarmakTwo/nuilith/blob/9fa46400/README.md?plain=1#L75-L75)
+- **`.nu`**: source files at the archive root plus `manifest.json` (`packages`, `entryScript`).
+- **`.zip`**: the same source files, with the manifest at `.nuilith/manifest.json`.
+- **Import**: `.py`, `.nu`, and `.zip` are accepted. Nested `.nuilith/manifest.json` is preferred when both manifests exist. Declared packages are restored into the worker after import.
 
 **Sources:**[index.html101](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L101-L101)[README.md75](https://github.com/NarmakTwo/nuilith/blob/9fa46400/README.md?plain=1#L75-L75)
+
+---
+
+### Peer sharing
+
+The Projects menu has Share (host a 6 or 7 character hex code, whole project or selected scripts) and Import from share (paste that code, land in a new or existing project). Cancel on the host, or closing the tab, leaves the WebRTC room. See [Peer Code Sharing](Peer-Code-Sharing.md).
 
 ---
 

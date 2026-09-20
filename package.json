@@ -12,6 +12,8 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "alpinejs": "^3.16.3"
+    "@trystero-p2p/torrent": "^0.25.4",
+    "alpinejs": "^3.16.3",
+    "trystero": "^0.25.4"
   }
 }

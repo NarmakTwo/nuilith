@@ -12,7 +12,7 @@ The `ideState` object is initialized during the `alpine:init` event. It manages 
 ### Core Reactive Properties
 
 The state is divided into several functional categories:
-PropertyTypeDescription`running`BooleanIndicates if a Python script is currently executing in the worker. [index.js138](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L138-L138)`inRepl`BooleanTracks if the IDE is in REPL mode (interactive terminal). [index.js165](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L165-L165)`zenMode`BooleanToggles a distraction-free UI by hiding sidebars and headers. [index.js154](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L154-L154)`files`ArrayA list of file objects `{name: string, content: string}` in the current project. [index.js180](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L180-L180)`activeFile`StringThe name of the file currently loaded into CodeMirror. [index.js181](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L181-L181)`installedPackages`ArrayList of packages currently available in the Pyodide environment. [index.js141](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L141-L141)`settingsOpen`BooleanControls the visibility of the settings drawer/modal. [index.js137](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L137-L137)
+PropertyTypeDescription`running`BooleanIndicates if a Python script is currently executing in the worker.`inRepl`BooleanTracks if the IDE is in REPL mode (interactive terminal).`zenMode`BooleanToggles a distraction-free UI by hiding sidebars and headers.`files`ArrayA list of file objects `{name: string, code: string, active: boolean}` in the current project.`activeFile`StringThe name of the file currently loaded into CodeMirror.`entryScript`String or nullFilename Run executes. `null` means use the currently open file.`fileContextMenu`Object`{ open, x, y, filename }` for the file-tab right-click menu.`installedPackages`ArrayDeclared project packages (manifest), not the full micropip environment.`shareStatus`String`idle` / `waiting` / `connected` for a live WebRTC share host session.`settingsOpen`BooleanControls the visibility of the settings drawer/modal.
 ### UI State Logic Flow
 
 The following diagram illustrates how the `ideState` object mediates interactions between the user and the underlying IDE components.
@@ -80,15 +80,22 @@ User settings (e.g., `fontSize`, `theme`, `keybindings`) are persisted to `local
 
 The `ideState` object defines several methods that handle complex UI-to-Logic transitions:
 
-### Code Execution (`runCode`)
+### Code Execution (`runcode`)
 
-The `runCode()` method checks the current state; if `running` is false, it gathers the code from the `activeFile` and sends a `RUN` message to the `pythonWorker`. It also updates the `running` state to `true`, which reactively changes the "Run" button to a "Stop" button in the UI. [index.js464-484](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L464-L484)
+`runcode()` in `index.js` is the Run-button handler. It asks `ideState.getRunCode()` for the buffer to send:
+
+- If `entryScript` is set and that file still exists, that file's `code` is sent.
+- Otherwise the currently open CodeMirror buffer is sent.
+
+The editor is flushed into `files` first so an entry that is also the active tab includes unsaved edits. `running` is set to `true`, which swaps Run for Stop.
 
 ### File Management
 
-- **`switchFile(name)`**: Saves the current editor content to the `files` array, updates `activeFile`, and loads the new file's content into CodeMirror. [index.js285-300](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L285-L300)
-- **`addFile()`**: Prompts for a filename, creates a new entry in the `files` array, and switches focus to it. [index.js302-315](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L302-L315)
-- **`deleteFile(name)`**: Removes a file from the project state and IndexedDB, ensuring at least `main.py` remains. [index.js317-333](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L317-L333)
+- **`switchFile(name)`**: Saves the current editor content to the `files` array, updates `activeFile`, and loads the new file's content into CodeMirror.
+- **`createNewFile()`**: Creates `untitled.py` (or `untitledN.py`) and switches focus to it.
+- **`deleteFile(name)`**: Confirms, then removes a file. If it was the entry script, `entryScript` is cleared.
+- **`setEntryScript(name)` / `unsetEntryScript()`**: One entry per project. Setting a new file revokes the previous one. Unset makes Run use the open file.
+- **`openFileContextMenu(event, name)`**: Positions the right-click menu in viewport coordinates.
 
 ### Package Management
 

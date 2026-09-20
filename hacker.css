@@ -1,0 +1,112 @@
+/* Hacker: phosphor-green syntax on pure black.
+   Token colors are applied via CodeMirror's cm-s-hacker class;
+   chrome (bg/fg/menu) is still driven by CSS variables in applyTheme(). */
+.cm-s-hacker.CodeMirror {
+  background: #000000;
+  color: #009F00;
+  font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+}
+
+.cm-s-hacker .CodeMirror-gutters {
+  background: #000000;
+  border-right: 1px solid #003300;
+  color: #006600;
+}
+
+.cm-s-hacker .CodeMirror-linenumber {
+  color: #006600;
+}
+
+.cm-s-hacker .CodeMirror-cursor {
+  border-left: 2px solid #00CD00;
+}
+
+.cm-s-hacker .CodeMirror-selected {
+  background: #003300;
+}
+
+.cm-s-hacker.CodeMirror-focused .CodeMirror-selected {
+  background: #003300;
+}
+
+.cm-s-hacker .CodeMirror-activeline-background {
+  background: #001a00;
+}
+
+.cm-s-hacker .CodeMirror-matchingbracket {
+  color: #00CD00 !important;
+  background: #003300;
+  font-weight: bold;
+}
+
+/* def, class, if, for, return, and, or, not, ... */
+.cm-s-hacker .cm-keyword {
+  color: #549B54;
+}
+
+/* True, False, None */
+.cm-s-hacker .cm-atom {
+  color: #549B54;
+}
+
+/* Builtin functions: print, len, range, ... */
+.cm-s-hacker .cm-builtin {
+  color: #00CD00;
+}
+
+.cm-s-hacker .cm-string {
+  color: #81F281;
+}
+
+.cm-s-hacker .cm-string-2 {
+  color: #81F281;
+}
+
+.cm-s-hacker .cm-string.cm-special,
+.cm-s-hacker .cm-string-2.cm-special {
+  color: #00CD00;
+}
+
+.cm-s-hacker .cm-comment {
+  color: #006B00;
+  font-style: italic;
+}
+
+.cm-s-hacker .cm-number {
+  color: #00CD00;
+}
+
+.cm-s-hacker .cm-operator {
+  color: #009F00;
+}
+
+/* self, cls */
+.cm-s-hacker .cm-variable-2 {
+  color: #549B54;
+}
+
+.cm-s-hacker .cm-variable {
+  color: #009F00;
+}
+
+/* Function and class def names */
+.cm-s-hacker .cm-def {
+  color: #00CD00;
+}
+
+.cm-s-hacker .cm-variable.cm-callee,
+.cm-s-hacker .cm-tag {
+  color: #00CD00;
+}
+
+.cm-s-hacker .cm-meta {
+  color: #549B54;
+}
+
+.cm-s-hacker .cm-error {
+  color: #ff0000;
+}
+
+.cm-s-hacker .cm-punctuation {
+  color: #009F00;
+}

@@ -24,7 +24,7 @@ Nuilith supports alternative input modes by loading external CodeMirror keymap s
 
 - **Vim:** Loaded via `keymap/vim.js`[index.html93](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L93-L93)
 - **Emacs:** Loaded via `keymap/emacs.js`[index.html94](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html#L94-L94)
-- **Default:** Standard browser-based text editing.
+- **Default:** Standard browser-based text editing, plus CodeMirror search: Ctrl/Cmd-F find, Ctrl-H / Shift-Ctrl-F replace, Alt-G jump to line (`extraKeys` in `index.js`).
 
 ### Bracket Mastery & Active Line
 

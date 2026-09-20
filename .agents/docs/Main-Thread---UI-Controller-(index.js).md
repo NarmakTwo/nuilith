@@ -13,7 +13,7 @@ The UI logic is encapsulated within a reactive Alpine.js component named `ideSta
 
 - **Runtime State**: `running` (boolean) and `inRepl` (boolean) toggle the UI between execution and idle modes [index.js138-165](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L138-L165)
 - **Feature Toggles**: User preferences such as `zenMode`, `featureTabs`, and `featurePackages` are persisted in `localStorage` and drive conditional rendering in the DOM [index.js149-154](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L149-L154)
-- **Project & File System**: `currentProject`, `files`, and `activeFile` manage the virtual workspace [index.js168-182](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L168-L182)
+- **Project & File System**: `currentProject`, `files`, `activeFile`, `entryScript`, and share session fields manage the virtual workspace and WebRTC host/receive UI.
 
 ### UI-Code Entity Mapping
 

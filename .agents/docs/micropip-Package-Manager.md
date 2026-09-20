@@ -28,11 +28,11 @@ The Web Worker receives the `INSTALL` type message [worker.js85](https://github.
 
 ### 4. Response and Persistence
 
-Upon completion, the worker queries the full list of installed packages using `micropip.list()`[worker.js109](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L109-L109) It sends an `INSTALL_SUCCESS` message back to the main thread [worker.js113-118](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L113-L118) The main thread then:
+Upon completion, the worker sends `INSTALL_SUCCESS` with the `requested` names (the packages we asked for). The main thread merges those names into `ideState.installedPackages` and persists them on the project. It does **not** replace the declared list with `micropip.list()`, because that list includes helper wheels such as pyflakes.
 
-- Updates `window.ideStateData.installedPackages`[index.js98](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L98-L98)
-- Sets `installingPackage` to `false` to stop the UI spinner [index.js99](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L99-L99)
-- Persists the list to `localStorage` under the key `installedPackages`[index.js101](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L101-L101)
+Run (`prepareRun`) mounts all `.py` files (`SYNC_FILES`), restores declared packages, then scans project source for third-party imports and installs any that are missing.
+
+**Sources:**[index.js](index.js)[worker.js](../../static/worker.js)
 
 **Sources:**[index.js95-120](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L95-L120)[worker.js84-128](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L84-L128)
 
@@ -69,9 +69,9 @@ localStorage.setItem('installedPackages', ...)
 
 To maintain environment consistency across sessions and project swaps, Nuilith implements a silent re-installation protocol.
 
-- **Initial Load:** When `worker.js` sends the `READY` signal, the main thread checks `localStorage` for `installedPackages`[index.js58-61](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L58-L61)
-- **Restoration:** If packages are found, it triggers an `INSTALL` message with `isSilent: true`[index.js64](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L64-L64)
-- **Suppression:** In the worker, the `isSilent` flag ensures that if an error occurs or the installation succeeds, no toast notifications are displayed to the user [worker.js103-111](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L103-L111)
+- **Initial Load:** When `worker.js` sends `READY`, the main thread installs `ideState.installedPackages` (falling back to `localStorage`) with `reason: 'restore'`.
+- **Project import / switch:** `switchProject` queues the same restore.
+- **Run:** `prepareRun` restores declared packages, then auto-installs newly detected imports.
 
 **Sources:**[index.js58-67](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.js#L58-L67)[worker.js87-125](https://github.com/NarmakTwo/nuilith/blob/9fa46400/worker.js#L87-L125)
 

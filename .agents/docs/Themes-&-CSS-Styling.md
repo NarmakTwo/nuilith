@@ -2,6 +2,8 @@
 Relevant source files
 - [index.html](https://github.com/NarmakTwo/nuilith/blob/9fa46400/index.html)
 - [programiz-inspired.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/programiz-inspired.css)
+- [hacker.css](https://github.com/NarmakTwo/nuilith/blob/HEAD/hacker.css)
+- [cursor.css](https://github.com/NarmakTwo/nuilith/blob/HEAD/cursor.css)
 - [style.css](https://github.com/NarmakTwo/nuilith/blob/9fa46400/style.css)
 
 This page documents the Nuilith visual engine, including the theme synchronization between the UI and CodeMirror, the flexible glassmorphism layout, and custom component implementations designed to bypass framework limitations.
@@ -104,7 +106,7 @@ The font-size and auto-save interval sliders use a custom `-webkit-slider-thumb`
 
 ## Programiz CodeMirror Theme
 
-While Nuilith supports standard CodeMirror themes (Nord, Dracula, Monokai), it defaults to a custom `programiz` theme defined in `programiz-inspired.css`.
+While Nuilith supports standard CodeMirror themes (Nord, Dracula, Monokai), it defaults to a custom `programiz` theme defined in `programiz-inspired.css`. Additional custom skins live in `hacker.css` and `cursor.css`.
 
 ### Visual Characteristics
 
@@ -119,6 +121,22 @@ While Nuilith supports standard CodeMirror themes (Nord, Dracula, Monokai), it d
 ### Implementation Logic
 
 The theme is applied by adding the `.cm-s-programiz` class to the CodeMirror instance. The CSS targets specific CodeMirror internal tokens (e.g., `.cm-atom`, `.cm-def`, `.cm-meta`) to provide a high-contrast Python editing experience.
+
+## Hacker CodeMirror Theme
+
+`hacker` is a custom phosphor-green skin on a pure black canvas. `applyTheme()` maps theme id `hacker` to CodeMirror class `hacker` (`.cm-s-hacker`).
+
+- **Background:** `#000000`
+- **Foreground:** `#009F00`
+- **Syntax:** keyword `#549B54`, function `#00CD00`, string `#81F281`
+
+## Cursor CodeMirror Theme
+
+`cursor` sits immediately after Light in the picker. `applyTheme()` maps theme id `cursor` to CodeMirror class `cursor` (`.cm-s-cursor`).
+
+- **Background:** `#141414`
+- **Foreground:** `#f0f0f0`
+- **Syntax:** keyword `#67d2c3`, function `#efb080`, string `#e394dc`
 
 **Diagram: Theme Application Flow**
 
